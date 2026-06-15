@@ -20,8 +20,10 @@ export class SignupService {
     firstName: string,
     lastName: string | null,
   ): Promise<void> {
-    await this.prisma.profile.create({
-      data: { id, email, firstName, lastName, updatedAt: new Date() },
+    await this.prisma.profile.upsert({
+      where: { id },
+      create: { id, email, firstName, lastName, updatedAt: new Date() },
+      update: {},
     });
   }
 

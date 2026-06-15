@@ -5,7 +5,7 @@ import { SignupWebhookDto } from './dto/signup.dto';
 
 const mockPrismaService = {
   profile: {
-    create: jest.fn().mockResolvedValue(undefined),
+    upsert: jest.fn().mockResolvedValue(undefined),
   },
 };
 
@@ -36,14 +36,16 @@ describe('SignupService', () => {
 
       await service.handleWebhook(payload);
 
-      expect(mockPrismaService.profile.create).toHaveBeenCalledWith({
-        data: {
+      expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
+        where: { id: 'uuid-123' },
+        create: {
           id: 'uuid-123',
           email: 'john.doe@example.com',
           firstName: 'John',
           lastName: 'Doe',
           updatedAt: expect.any(Date),
         },
+        update: {},
       });
     });
 
@@ -55,19 +57,21 @@ describe('SignupService', () => {
 
       await service.handleWebhook(payload);
 
-      expect(mockPrismaService.profile.create).toHaveBeenCalledWith({
-        data: {
+      expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
+        where: { id: 'uuid-123' },
+        create: {
           id: 'uuid-123',
           email: 'johndoe@example.com',
           firstName: 'Johndoe',
           lastName: null,
           updatedAt: expect.any(Date),
         },
+        update: {},
       });
     });
 
     it('should throw if prisma throws', async () => {
-      mockPrismaService.profile.create.mockRejectedValueOnce(
+      mockPrismaService.profile.upsert.mockRejectedValueOnce(
         new Error('DB error'),
       );
 
@@ -77,6 +81,18 @@ describe('SignupService', () => {
       };
 
       await expect(service.handleWebhook(payload)).rejects.toThrow('DB error');
+    });
+
+    it('should be idempotent on duplicate webhook', async () => {
+      const payload: SignupWebhookDto = {
+        id: 'uuid-123',
+        email: 'john.doe@example.com',
+      };
+
+      await service.handleWebhook(payload);
+      await service.handleWebhook(payload);
+
+      expect(mockPrismaService.profile.upsert).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -115,11 +131,13 @@ describe('SignupService', () => {
 
         await service.handleWebhook(payload);
 
-        expect(mockPrismaService.profile.create).toHaveBeenCalledWith({
-          data: expect.objectContaining({
+        expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
+          where: { id: 'uuid-123' },
+          create: expect.objectContaining({
             firstName: expected.firstName,
             lastName: expected.lastName,
           }),
+          update: {},
         });
       },
     );

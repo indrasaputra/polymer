@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
-import { Logger, LogLevel } from '@nestjs/common';
+import { Logger, LogLevel, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const logger = new Logger('Account');
@@ -19,11 +19,20 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1');
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   app.enableShutdownHooks(); // Ensures onModuleDestroy events run when your server closes
 
   await app.listen(port);
-  logger.log(`Accout service is running on: http://localhost:${port}`);
+  logger.log(
+    `Backend service - account - is running on: http://localhost:${port}`,
+  );
 }
 
 bootstrap();

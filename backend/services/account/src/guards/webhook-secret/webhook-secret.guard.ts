@@ -2,20 +2,25 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Request } from 'express';
-import { Observable } from 'rxjs';
 
 @Injectable()
 export class WebhookSecretGuard implements CanActivate {
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const request = context.switchToHttp().getRequest<Request>();
-    const secret = request.headers['x-webhook-secret'];
+  canActivate(context: ExecutionContext): boolean {
+    const expectedSecret = process.env.WEBHOOK_SECRET;
+    if (!expectedSecret) {
+      throw new InternalServerErrorException(
+        'WEBHOOK_SECRET is not configured',
+      );
+    }
 
-    if (secret !== process.env.WEBHOOK_SECRET) {
+    const request = context.switchToHttp().getRequest<Request>();
+    const secret = request.header('x-webhook-secret');
+
+    if (!secret || typeof secret !== 'string' || secret !== expectedSecret) {
       throw new UnauthorizedException('Secret is invalid');
     }
 
