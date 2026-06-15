@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:fix": "prisma-case-format --file prisma/schema.prisma --map-field-case=snake",
     "prisma:gen": "prisma generate",
-    "db:migrate": "pnpm prisma:fix && prisma migrate dev && pnpm prisma:gen"
+    "db:migrate": "pnpm prisma:fix && prisma migrate dev && pnpm prisma:gen",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
