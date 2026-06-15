@@ -1,7 +1,54 @@
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { WebhookSecretGuard } from './webhook-secret.guard';
 
+const mockExecutionContext = (secret: string | undefined): ExecutionContext =>
+  ({
+    switchToHttp: () => ({
+      getRequest: () => ({
+        headers: {
+          'x-webhook-secret': secret,
+        },
+      }),
+    }),
+  }) as unknown as ExecutionContext;
+
 describe('WebhookSecretGuard', () => {
+  let guard: WebhookSecretGuard;
+
+  beforeEach(() => {
+    guard = new WebhookSecretGuard();
+    process.env.WEBHOOK_SECRET = 'valid-secret';
+  });
+
+  afterEach(() => {
+    delete process.env.WEBHOOK_SECRET;
+  });
+
   it('should be defined', () => {
-    expect(new WebhookSecretGuard()).toBeDefined();
+    expect(guard).toBeDefined();
+  });
+
+  it('should return true when secret is valid', () => {
+    const context = mockExecutionContext('valid-secret');
+
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
+  it('should throw UnauthorizedException when secret is invalid', () => {
+    const context = mockExecutionContext('invalid-secret');
+
+    expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
+  });
+
+  it('should throw UnauthorizedException with correct message when secret is invalid', () => {
+    const context = mockExecutionContext('invalid-secret');
+
+    expect(() => guard.canActivate(context)).toThrow('Secret is invalid');
+  });
+
+  it('should throw UnauthorizedException when secret is missing', () => {
+    const context = mockExecutionContext(undefined);
+
+    expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
   });
 });

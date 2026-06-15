@@ -9,7 +9,7 @@ import { LoggerMiddleware } from './shared/middleware/logger.middleware';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // 2. Register your transactional wallets module execution scope
+    // 2. Register signup module execution scope
     SignupModule,
   ],
 })
