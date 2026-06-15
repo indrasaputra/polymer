@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SignupModule } from './signup/signup.module';
+import { LoggerMiddleware } from './shared/middleware/logger.middleware';
 
 @Module({
   imports: [
@@ -12,4 +13,8 @@ import { SignupModule } from './signup/signup.module';
     SignupModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

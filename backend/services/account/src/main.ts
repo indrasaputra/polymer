@@ -1,12 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
-import { Logger } from '@nestjs/common';
+import { Logger, LogLevel } from '@nestjs/common';
 
 async function bootstrap() {
   const logger = new Logger('Account');
-  const app = await NestFactory.create(AppModule);
   const port = process.env.PORT ?? 9001;
+
+  const isDev = (process.env.ENV ?? 'development') === 'development';
+
+  const logLevels: LogLevel[] = isDev
+    ? ['error', 'warn', 'log', 'debug', 'verbose']
+    : ['error'];
+
+  const app = await NestFactory.create(AppModule, {
+    logger: logLevels,
+  });
 
   app.setGlobalPrefix('api/v1');
   app.useGlobalFilters(new HttpExceptionFilter());
