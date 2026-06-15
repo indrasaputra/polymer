@@ -1,4 +1,7 @@
-import { Controller } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { SignupService } from './signup.service';
+import { SignupWebhookDto } from './dto/signup.dto';
+import { WebhookSecretGuard } from '../guards/webhook-secret/webhook-secret.guard';
 
 @Controller('signup')
 export class SignupController {
@@ -6,14 +9,8 @@ export class SignupController {
 
   @Post('webhook')
   @HttpCode(204)
-  async handleWebhook(
-    @Headers('x-webhook-secret') secret: string,
-    @Body() payload: SupabaseWebhookDto,
-  ) {
-    if (secret !== process.env.WEBHOOK_SECRET) {
-      throw new UnauthorizedException('Secret is invalid');
-    }
-
+  @UseGuards(WebhookSecretGuard)
+  async handleWebhook(@Body() payload: SignupWebhookDto): Promise<void> {
     await this.signupService.handleWebhook(payload);
   }
 }

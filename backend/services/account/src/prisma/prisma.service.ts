@@ -17,11 +17,13 @@ export class PrismaService
       throw new Error('DATABASE_URL environment variable is missing!');
     }
 
+    const schema = configService.get<string>('DATABASE_SCHEMA') ?? 'public';
+
     const poolConfig: PoolConfig = {
       connectionString: dbUrl,
     };
     const pool = new Pool(poolConfig);
-    const adapter = new PrismaPg(pool);
+    const adapter = new PrismaPg(pool, { schema });
 
     super({ adapter });
     this.pool = pool;

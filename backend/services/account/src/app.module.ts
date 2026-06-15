@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { SignupController } from './signup/signup.controller';
-import { SignupService } from './signup/signup.service';
-import { PrismaService } from './prisma/prisma.service';
-import { PrismaModule } from './prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
+import { SignupModule } from './signup/signup.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [AppController, SignupController],
-  providers: [AppService, SignupService, PrismaService],
+  imports: [
+    // 1. Force environment configurations to load globally across your architecture
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    // 2. Register your transactional wallets module execution scope
+    SignupModule,
+  ],
 })
 export class AppModule {}

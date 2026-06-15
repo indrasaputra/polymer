@@ -18,9 +18,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "fix:prisma": "prisma-case-format --file prisma/schema.prisma --map-table-case=snake --map-field-case=snake",
-    "prismagen": "prisma generate",
-    "migrate:db": "pnpm fix:prisma && prisma migrate dev && pnpm prismagen"
+    "prisma:fix": "prisma-case-format --file prisma/schema.prisma --map-field-case=snake",
+    "prisma:gen": "prisma generate",
+    "db:migrate": "pnpm prisma:fix && prisma migrate dev && pnpm prisma:gen"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

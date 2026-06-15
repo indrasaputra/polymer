@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "profile" (
+CREATE TABLE "profiles" (
     "id" UUID NOT NULL,
     "email" TEXT NOT NULL,
     "first_name" TEXT,
@@ -8,8 +8,8 @@ CREATE TABLE "profile" (
     "updated_at" TIMESTAMP(3) NOT NULL,
     "deleted_at" TIMESTAMP(3),
 
-    CONSTRAINT "profile_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "profiles_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "profile_email_key" ON "profile"("email");
+CREATE UNIQUE INDEX "profiles_email_key" ON "profiles"("email");
