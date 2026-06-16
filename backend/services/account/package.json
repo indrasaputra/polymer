@@ -21,6 +21,7 @@
     "prisma:fix": "prisma-case-format --file prisma/schema.prisma --map-field-case=snake",
     "prisma:gen": "prisma generate",
     "db:migrate": "pnpm prisma:fix && prisma migrate dev && pnpm prisma:gen",
+    "pretty": "pnpm format && pnpm lint && pnpm tsc --noEmit",
     "postinstall": "prisma generate"
   },
   "dependencies": {

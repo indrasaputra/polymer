@@ -4,9 +4,12 @@ describe('config', () => {
   const ORIGINAL_ENV = process.env.ENV;
 
   afterEach(() => {
-    // restore after each test to avoid leaking state
-    process.env.ENV = ORIGINAL_ENV;
-    jest.resetModules(); // force re-import since module is evaluated at load time
+    if (ORIGINAL_ENV === undefined) {
+      delete process.env.ENV;
+    } else {
+      process.env.ENV = ORIGINAL_ENV;
+    }
+    jest.resetModules();
   });
 
   describe('ENV', () => {

@@ -13,9 +13,10 @@ async function bootstrap() {
     bodyParser: true,
     rawBody: true,
   });
+  const logger = app.get(Logger);
 
   app.use(logResponseBody);
-  app.useLogger(app.get(Logger));
+  app.useLogger(logger);
   app.useGlobalInterceptors(new LoggerErrorInterceptor());
   app.setGlobalPrefix('api/v1');
   app.useGlobalFilters(new HttpExceptionFilter());
@@ -29,7 +30,7 @@ async function bootstrap() {
   app.enableShutdownHooks(); // Ensures onModuleDestroy events run when your server closes
 
   await app.listen(port);
-  console.log(`Backend service - account - is running on port: ${port}`);
+  logger.log(`Backend service - account - is running on port: ${port}`);
 }
 
 bootstrap();
