@@ -60,27 +60,27 @@ DECLARE
     -- To change the budget, update only this constant.
     k_max_retries CONSTANT INT := 5;
 
-    user_service_signup_webhook_url TEXT;
-    user_service_webhook_secret TEXT;
+    ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL TEXT;
+    account_service_webhook_secret TEXT;
     event_record RECORD;
     response_record RECORD;
     new_net_id BIGINT;
     table_exists BOOLEAN;
 BEGIN
     -- Load active cluster configuration keys
-    SELECT decrypted_secret INTO user_service_signup_webhook_url
-    FROM vault.decrypted_secrets WHERE name = 'user_service_signup_webhook_url';
+    SELECT decrypted_secret INTO ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL
+    FROM vault.decrypted_secrets WHERE name = 'ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL';
 
-    SELECT decrypted_secret INTO user_service_webhook_secret
-    FROM vault.decrypted_secrets WHERE name = 'user_service_webhook_secret';
+    SELECT decrypted_secret INTO account_service_webhook_secret
+    FROM vault.decrypted_secrets WHERE name = 'account_service_webhook_secret';
 
     -- Short-circuit if either config value is missing.
     -- Without this guard, every PENDING row would call net.http_post with a NULL URL
     -- on each cron tick, burning through the retry budget with no chance of success.
-    IF user_service_signup_webhook_url IS NULL OR user_service_webhook_secret IS NULL THEN
+    IF ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL IS NULL OR account_service_webhook_secret IS NULL THEN
         RAISE WARNING 'dispatch_and_reconcile_outbox: missing webhook config (url=%, secret set=%). Skipping run.',
-            user_service_signup_webhook_url,
-            (user_service_webhook_secret IS NOT NULL);
+            ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL,
+            (account_service_webhook_secret IS NOT NULL);
         RETURN;
     END IF;
 
@@ -95,11 +95,11 @@ BEGIN
         BEGIN
             -- Pass payload to pg_net queue and capture its query token ID
             SELECT net.http_post(
-                url := user_service_signup_webhook_url,
+                url := ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL,
                 body := event_record.payload,
                 headers := jsonb_build_object(
                     'Content-Type', 'application/json',
-                    'X-Webhook-Secret', user_service_webhook_secret
+                    'X-Webhook-Secret', account_service_webhook_secret
                 ),
                 timeout_milliseconds := 2000
             ) INTO new_net_id;
@@ -137,7 +137,7 @@ BEGIN
             IF response_record.status_code IS NOT NULL
                AND response_record.status_code >= 200
                AND response_record.status_code < 300 THEN
-                -- Success: user service responded with a 2xx status
+                -- Success: account service responded with a 2xx status
                 UPDATE public.outbox_events
                 SET status = 'PROCESSED', updated_at = NOW()
                 WHERE id = event_record.id;

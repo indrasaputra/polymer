@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { SignupModule } from './signup/signup.module';
+import { ProfileModule } from './profile/profile.module';
 import { pinoHttpConfig } from './shared/logger/pino.logger';
 import { LoggerModule } from 'nestjs-pino';
 
@@ -14,8 +14,8 @@ import { LoggerModule } from 'nestjs-pino';
       pinoHttp: pinoHttpConfig,
       assignResponse: true, // enable propagation of `assign` fields into "request completed" logs
     }),
-    // 2. Register signup module execution scope
-    SignupModule,
+    // 2. Register profile module execution scope
+    ProfileModule,
   ],
 })
 export class AppModule {}

@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SignupService } from './signup.service';
+import { ProfileService } from './profile.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { SignupWebhookDto } from './dto/signup.dto';
+import { ProfileWebhookDto } from './dto/profile.dto';
 
 const mockPrismaService = {
   profile: {
@@ -9,32 +9,32 @@ const mockPrismaService = {
   },
 };
 
-describe('SignupService', () => {
-  let service: SignupService;
+describe('ProfileService', () => {
+  let service: ProfileService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        SignupService,
+        ProfileService,
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
-    service = module.get<SignupService>(SignupService);
+    service = module.get<ProfileService>(ProfileService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('handleWebhook', () => {
+  describe('handleCreateProfileWebhook', () => {
     it('should create profile with extracted name from email', async () => {
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'john.doe@example.com',
       };
 
-      await service.handleWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
 
       expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
         where: { id: 'uuid-123' },
@@ -50,12 +50,12 @@ describe('SignupService', () => {
     });
 
     it('should create profile with null lastName for single name email', async () => {
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'johndoe@example.com',
       };
 
-      await service.handleWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
 
       expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
         where: { id: 'uuid-123' },
@@ -75,22 +75,24 @@ describe('SignupService', () => {
         new Error('DB error'),
       );
 
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'john.doe@example.com',
       };
 
-      await expect(service.handleWebhook(payload)).rejects.toThrow('DB error');
+      await expect(service.handleCreateProfileWebhook(payload)).rejects.toThrow(
+        'DB error',
+      );
     });
 
     it('should be idempotent on duplicate webhook', async () => {
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'john.doe@example.com',
       };
 
-      await service.handleWebhook(payload);
-      await service.handleWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
 
       expect(mockPrismaService.profile.upsert).toHaveBeenCalledTimes(2);
     });
@@ -127,9 +129,9 @@ describe('SignupService', () => {
     it.each(cases)(
       '$email → firstName: $expected.firstName, lastName: $expected.lastName',
       async ({ email, expected }) => {
-        const payload: SignupWebhookDto = { id: 'uuid-123', email };
+        const payload: ProfileWebhookDto = { id: 'uuid-123', email };
 
-        await service.handleWebhook(payload);
+        await service.handleCreateProfileWebhook(payload);
 
         expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
           where: { id: 'uuid-123' },

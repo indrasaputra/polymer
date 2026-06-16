@@ -8,7 +8,7 @@ import { HttpExceptionFilter } from './http-exception.filter';
 
 const mockRequest = (overrides?: object) => ({
   method: 'POST',
-  url: '/api/v1/signup/webhook',
+  url: '/api/v1/profiles/webhook',
   ...overrides,
 });
 
@@ -77,7 +77,7 @@ describe('HttpExceptionFilter', () => {
       expect(res.json).toHaveBeenCalledWith({
         statusCode: HttpStatus.UNAUTHORIZED,
         message: 'Unauthorized',
-        path: '/api/v1/signup/webhook',
+        path: '/api/v1/profiles/webhook',
         timestamp: '2026-01-01T00:00:00.000Z',
       });
     });
@@ -102,7 +102,7 @@ describe('HttpExceptionFilter', () => {
       expect(res.json).toHaveBeenCalledWith({
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Internal server error',
-        path: '/api/v1/signup/webhook',
+        path: '/api/v1/profiles/webhook',
         timestamp: '2026-01-01T00:00:00.000Z',
       });
     });
@@ -126,7 +126,7 @@ describe('HttpExceptionFilter', () => {
       filter.catch(exception, mockHost(req, res));
 
       expect(loggerSpy).toHaveBeenCalledWith(
-        `POST /api/v1/signup/webhook 500 - Internal server error`,
+        `POST /api/v1/profiles/webhook 500 - Internal server error`,
         exception.stack,
       );
     });
@@ -139,7 +139,7 @@ describe('HttpExceptionFilter', () => {
       filter.catch(exception, mockHost(req, res));
 
       expect(loggerSpy).toHaveBeenCalledWith(
-        `POST /api/v1/signup/webhook 500 - Internal server error`,
+        `POST /api/v1/profiles/webhook 500 - Internal server error`,
         JSON.stringify(exception),
       );
     });

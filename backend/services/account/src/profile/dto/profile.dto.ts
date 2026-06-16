@@ -1,7 +1,7 @@
 import { IsUUID, IsEmail, IsOptional } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
-export class SignupWebhookDto {
+export class ProfileWebhookDto {
   @IsUUID()
   id: string;
 

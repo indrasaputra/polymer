@@ -1,32 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SignupController } from './signup.controller';
-import { SignupService } from './signup.service';
+import { ProfileController } from './profile.controller';
+import { ProfileService } from './profile.service';
 import { WebhookSecretGuard } from '../guards/webhook-secret/webhook-secret.guard';
-import { SignupWebhookDto } from './dto/signup.dto';
+import { ProfileWebhookDto } from './dto/profile.dto';
 import { ValidationPipe } from '@nestjs/common';
 
-const mockSignupService = {
-  handleWebhook: jest.fn().mockResolvedValue(undefined),
+const mockProfileService = {
+  handleCreateProfileWebhook: jest.fn().mockResolvedValue(undefined),
 };
 
 const mockWebhookSecretGuard = {
   canActivate: jest.fn().mockReturnValue(true),
 };
 
-describe('SignupController', () => {
-  let controller: SignupController;
+describe('ProfileController', () => {
+  let controller: ProfileController;
   let validationPipe: ValidationPipe;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [SignupController],
-      providers: [{ provide: SignupService, useValue: mockSignupService }],
+      controllers: [ProfileController],
+      providers: [{ provide: ProfileService, useValue: mockProfileService }],
     })
       .overrideGuard(WebhookSecretGuard)
       .useValue(mockWebhookSecretGuard)
       .compile();
 
-    controller = module.get<SignupController>(SignupController);
+    controller = module.get<ProfileController>(ProfileController);
     validationPipe = new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
@@ -42,30 +42,31 @@ describe('SignupController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('handleWebhook', () => {
-    const payload: SignupWebhookDto = {
+  describe('createProfileWebhook', () => {
+    const payload: ProfileWebhookDto = {
       id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
       email: 'john.doe@example.com',
     };
 
-    it('should call signupService.handleWebhook with payload', async () => {
-      await controller.handleWebhook(payload);
-
-      expect(mockSignupService.handleWebhook).toHaveBeenCalledWith(payload);
+    it('should call ProfileService.createProfileWebhook with payload', async () => {
+      await controller.createProfileWebhook(payload);
+      expect(
+        mockProfileService.handleCreateProfileWebhook,
+      ).toHaveBeenCalledWith(payload);
     });
 
     it('should return void', async () => {
-      const result = await controller.handleWebhook(payload);
+      const result = await controller.createProfileWebhook(payload);
 
       expect(result).toBeUndefined();
     });
 
-    it('should throw if signupService throws', async () => {
-      mockSignupService.handleWebhook.mockRejectedValueOnce(
+    it('should throw if ProfileService throws', async () => {
+      mockProfileService.handleCreateProfileWebhook.mockRejectedValueOnce(
         new Error('Service error'),
       );
 
-      await expect(controller.handleWebhook(payload)).rejects.toThrow(
+      await expect(controller.createProfileWebhook(payload)).rejects.toThrow(
         'Service error',
       );
     });
@@ -74,7 +75,7 @@ describe('SignupController', () => {
       await expect(
         validationPipe.transform(
           { id: 'not-a-uuid', email: 'john.doe@example.com' },
-          { type: 'body', metatype: SignupWebhookDto },
+          { type: 'body', metatype: ProfileWebhookDto },
         ),
       ).rejects.toThrow();
     });
@@ -83,7 +84,7 @@ describe('SignupController', () => {
       await expect(
         validationPipe.transform(
           { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', email: 'not-an-email' },
-          { type: 'body', metatype: SignupWebhookDto },
+          { type: 'body', metatype: ProfileWebhookDto },
         ),
       ).rejects.toThrow();
     });
@@ -96,7 +97,7 @@ describe('SignupController', () => {
             email: 'john.doe@example.com',
             unknown: 'field',
           },
-          { type: 'body', metatype: SignupWebhookDto },
+          { type: 'body', metatype: ProfileWebhookDto },
         ),
       ).rejects.toThrow();
     });

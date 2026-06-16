@@ -56,8 +56,8 @@ max_client_conn = 100
 [db.vault]
 # secret_key = "env(SECRET_VALUE)"
 # User service URL to send webhook after sign-up
-user_service_signup_webhook_url = "env(USER_SERVICE_SIGNUP_WEBHOOK_URL)"
-user_service_webhook_secret = "env(USER_SERVICE_WEBHOOK_SECRET)"
+ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL = "env(ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL)"
+ACCOUNT_SERVICE_WEBHOOK_SECRET = "env(ACCOUNT_SERVICE_WEBHOOK_SECRET)"
 
 [db.migrations]
 # If disabled, migrations will be skipped during a db push or reset.
