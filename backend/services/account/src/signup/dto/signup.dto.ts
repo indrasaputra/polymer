@@ -1,4 +1,5 @@
-import { IsUUID, IsEmail } from 'class-validator';
+import { IsUUID, IsEmail, IsOptional } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class SignupWebhookDto {
   @IsUUID()
@@ -7,5 +8,8 @@ export class SignupWebhookDto {
   @IsEmail()
   email: string;
 
+  @IsOptional()
+  @Transform(({ obj }) => obj.created_at ?? obj.createdAt)
+  @Type(() => Date)
   createdAt?: Date;
 }

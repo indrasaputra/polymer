@@ -1,7 +1,8 @@
-import { Module, MiddlewareConsumer } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SignupModule } from './signup/signup.module';
-import { LoggerMiddleware } from './shared/middleware/logger.middleware';
+import { pinoHttpConfig } from './shared/logger/pino.logger';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -9,12 +10,12 @@ import { LoggerMiddleware } from './shared/middleware/logger.middleware';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    LoggerModule.forRoot({
+      pinoHttp: pinoHttpConfig,
+      assignResponse: true, // enable propagation of `assign` fields into "request completed" logs
+    }),
     // 2. Register signup module execution scope
     SignupModule,
   ],
 })
-export class AppModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}
