@@ -1,176 +1,94 @@
-import { Logger } from '@nestjs/common';
-import { LoggerMiddleware } from './logger.middleware';
+// logResponseBody.middleware.spec.ts
 import { Request, Response, NextFunction } from 'express';
+import { logResponseBody } from './logger.middleware';
 
-const mockRequest = (overrides?: Partial<Request>): Partial<Request> => ({
-  method: 'POST',
-  url: '/api/v1/signup/webhook',
-  body: { id: 'uuid', email: 'john.doe@example.com' },
-  ...overrides,
-});
-
-const mockResponse = (): Partial<Response> & { getHeader: jest.Mock } => ({
-  statusCode: 200,
-  getHeader: jest.fn().mockReturnValue('123'),
-  on: jest.fn().mockImplementation((event: string, callback: () => void) => {
-    if (event === 'finish') callback();
-  }),
-});
-
-const mockNext: NextFunction = jest.fn();
-
-describe('LoggerMiddleware', () => {
-  let middleware: LoggerMiddleware;
-  let logSpy: jest.SpyInstance;
-  let debugSpy: jest.SpyInstance;
+describe('logResponseBody', () => {
+  let mockReq: Partial<Request>;
+  let mockRes: Partial<Response> & { body?: any };
+  let mockNext: NextFunction;
+  let originalJson: jest.Mock;
 
   beforeEach(() => {
-    process.env.ENV = 'development';
-    middleware = new LoggerMiddleware();
-    logSpy = jest.spyOn(Logger.prototype, 'log').mockImplementation(() => {});
-    debugSpy = jest
-      .spyOn(Logger.prototype, 'debug')
-      .mockImplementation(() => {});
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
-    delete process.env.ENV;
-  });
-
-  it('should be defined', () => {
-    expect(middleware).toBeDefined();
+    originalJson = jest.fn().mockReturnValue(mockRes);
+    mockReq = {};
+    mockRes = {
+      json: originalJson,
+      statusCode: 200,
+    };
+    mockNext = jest.fn();
   });
 
   it('should call next()', () => {
-    const next = jest.fn();
-    middleware.use(
-      mockRequest() as Request,
-      mockResponse() as unknown as Response,
-      next,
-    );
-
-    expect(next).toHaveBeenCalled();
+    logResponseBody(mockReq as Request, mockRes as Response, mockNext);
+    expect(mockNext).toHaveBeenCalled();
   });
 
-  describe('request logging', () => {
-    it('should log method, url, status, duration, content-length on finish', () => {
-      middleware.use(
-        mockRequest() as Request,
-        mockResponse() as unknown as Response,
-        mockNext,
-      );
+  it('should intercept res.json()', () => {
+    logResponseBody(mockReq as Request, mockRes as Response, mockNext);
+    expect(mockRes.json).not.toBe(originalJson); // replaced
+  });
 
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /^POST \/api\/v1\/signup\/webhook 200 \d+ms 123$/,
-        ),
-      );
-    });
+  it('should call original res.json() with the body', () => {
+    logResponseBody(mockReq as Request, mockRes as Response, mockNext);
 
-    it('should log - for content-length when header is missing', () => {
-      const res = mockResponse();
-      res.getHeader.mockReturnValue(undefined);
+    const body = { message: 'ok' };
+    mockRes.json!(body);
 
-      middleware.use(
-        mockRequest() as Request,
-        res as unknown as Response,
-        mockNext,
-      );
+    expect(originalJson).toHaveBeenCalledWith(body);
+  });
 
-      expect(logSpy).toHaveBeenCalledWith(
-        expect.stringMatching(/^POST \/api\/v1\/signup\/webhook 200 \d+ms -$/),
-      );
+  describe('when status code is 2xx', () => {
+    it('should NOT attach body to res', () => {
+      mockRes.statusCode = 200;
+      logResponseBody(mockReq as Request, mockRes as Response, mockNext);
+
+      mockRes.json!({ data: 'success' });
+
+      expect(mockRes.body).toBeUndefined();
     });
   });
 
-  describe('body logging', () => {
-    it('should log full body in development without redaction', () => {
-      middleware.use(
-        mockRequest() as Request,
-        mockResponse() as unknown as Response,
-        mockNext,
-      );
+  describe('when status code is 4xx', () => {
+    it('should attach body to res', () => {
+      mockRes.statusCode = 400;
+      logResponseBody(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        'Body: {"id":"uuid","email":"john.doe@example.com"}',
-      );
+      const body = { error: 'Bad Request' };
+      mockRes.json!(body);
+
+      expect(mockRes.body).toEqual(body);
     });
 
-    it('should not redact sensitive keys in development', () => {
-      const req = mockRequest({
-        body: {
-          id: 'uuid',
-          email: 'john@example.com',
-          password: 'supersecret',
-          token: 'abc123',
-        },
-      });
+    it('should attach body for 404', () => {
+      mockRes.statusCode = 404;
+      logResponseBody(mockReq as Request, mockRes as Response, mockNext);
 
-      middleware.use(
-        req as Request,
-        mockResponse() as unknown as Response,
-        mockNext,
-      );
+      const body = { error: 'Not Found' };
+      mockRes.json!(body);
 
-      expect(debugSpy).toHaveBeenCalledWith(
-        'Body: {"id":"uuid","email":"john@example.com","password":"supersecret","token":"abc123"}',
-      );
+      expect(mockRes.body).toEqual(body);
     });
+  });
 
-    it('should redact sensitive keys outside development', () => {
-      process.env.ENV = 'production';
-      middleware = new LoggerMiddleware();
+  describe('when status code is 5xx', () => {
+    it('should attach body to res', () => {
+      mockRes.statusCode = 500;
+      logResponseBody(mockReq as Request, mockRes as Response, mockNext);
 
-      const req = mockRequest({
-        body: {
-          id: 'uuid',
-          email: 'john@example.com',
-          password: 'supersecret',
-          token: 'abc123',
-        },
-      });
+      const body = { error: 'Internal Server Error' };
+      mockRes.json!(body);
 
-      middleware.use(
-        req as Request,
-        mockResponse() as unknown as Response,
-        mockNext,
-      );
-
-      expect(debugSpy).toHaveBeenCalledWith(
-        'Body: {"id":"uuid","email":"[REDACTED]","password":"[REDACTED]","token":"[REDACTED]"}',
-      );
+      expect(mockRes.body).toEqual(body);
     });
+  });
 
-    it('should not log body when body is empty', () => {
-      const req = mockRequest({ body: null });
+  it('should return the result of original res.json()', () => {
+    const returnValue = { mocked: true };
+    originalJson.mockReturnValue(returnValue);
 
-      middleware.use(
-        req as Request,
-        mockResponse() as unknown as Response,
-        mockNext,
-      );
+    logResponseBody(mockReq as Request, mockRes as Response, mockNext);
+    const result = mockRes.json!({ anything: true });
 
-      expect(debugSpy).not.toHaveBeenCalled();
-    });
-
-    it('should log body in production with non-sensitive keys unredacted', () => {
-      process.env.ENV = 'production';
-      middleware = new LoggerMiddleware();
-
-      const req = mockRequest({
-        body: { id: 'uuid', name: 'John' },
-      });
-
-      middleware.use(
-        req as Request,
-        mockResponse() as unknown as Response,
-        mockNext,
-      );
-
-      expect(debugSpy).toHaveBeenCalledWith(
-        'Body: {"id":"uuid","name":"John"}',
-      );
-    });
+    expect(result).toEqual(returnValue);
   });
 });
