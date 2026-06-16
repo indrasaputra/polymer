@@ -55,7 +55,7 @@ max_client_conn = 100
 
 [db.vault]
 # secret_key = "env(SECRET_VALUE)"
-# User service URL to send webhook after sign-up
+# Account service URL to send webhook after sign-up
 ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL = "env(ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL)"
 ACCOUNT_SERVICE_WEBHOOK_SECRET = "env(ACCOUNT_SERVICE_WEBHOOK_SECRET)"
 

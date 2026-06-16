@@ -60,7 +60,7 @@ DECLARE
     -- To change the budget, update only this constant.
     k_max_retries CONSTANT INT := 5;
 
-    ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL TEXT;
+    account_service_profile_webhook_url TEXT;
     account_service_webhook_secret TEXT;
     event_record RECORD;
     response_record RECORD;
@@ -68,8 +68,8 @@ DECLARE
     table_exists BOOLEAN;
 BEGIN
     -- Load active cluster configuration keys
-    SELECT decrypted_secret INTO ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL
-    FROM vault.decrypted_secrets WHERE name = 'ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL';
+    SELECT decrypted_secret INTO account_service_profile_webhook_url
+    FROM vault.decrypted_secrets WHERE name = 'account_service_profile_webhook_url';
 
     SELECT decrypted_secret INTO account_service_webhook_secret
     FROM vault.decrypted_secrets WHERE name = 'account_service_webhook_secret';
@@ -77,9 +77,9 @@ BEGIN
     -- Short-circuit if either config value is missing.
     -- Without this guard, every PENDING row would call net.http_post with a NULL URL
     -- on each cron tick, burning through the retry budget with no chance of success.
-    IF ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL IS NULL OR account_service_webhook_secret IS NULL THEN
+    IF account_service_profile_webhook_url IS NULL OR account_service_webhook_secret IS NULL THEN
         RAISE WARNING 'dispatch_and_reconcile_outbox: missing webhook config (url=%, secret set=%). Skipping run.',
-            ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL,
+            account_service_profile_webhook_url,
             (account_service_webhook_secret IS NOT NULL);
         RETURN;
     END IF;
@@ -95,7 +95,7 @@ BEGIN
         BEGIN
             -- Pass payload to pg_net queue and capture its query token ID
             SELECT net.http_post(
-                url := ACCOUNT_SERVICE_PROFILE_WEBHOOK_URL,
+                url := account_service_profile_webhook_url,
                 body := event_record.payload,
                 headers := jsonb_build_object(
                     'Content-Type', 'application/json',
