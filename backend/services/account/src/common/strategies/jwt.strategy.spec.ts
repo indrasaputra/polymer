@@ -1,5 +1,5 @@
-import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
+import { Config } from '../../config/config';
 
 // Mock 'jwks-rsa' to completely block outbound network requests
 jest.mock('jwks-rsa', () => ({
@@ -8,37 +8,36 @@ jest.mock('jwks-rsa', () => ({
   }),
 }));
 
+const mockConfig = {
+  supabase: {
+    jwksUrl: 'http://localhost:54321/auth/v1/.well-known/jwks.json',
+  },
+} as Config;
+
 import { JwtStrategy } from './jwt.strategy';
 import { JwtToken } from '../dto/jwt-token.interface';
 
 describe('JwtStrategy', () => {
-  let configService: jest.Mocked<ConfigService>;
-
-  beforeEach(() => {
-    configService = {
-      get: jest.fn(),
-    } as unknown as jest.Mocked<ConfigService>;
-  });
-
   afterEach(() => {
     jest.clearAllMocks();
   });
 
   describe('Constructor Initialization', () => {
-    it('should initialize successfully when JWKS URL is provided', () => {
-      configService.get.mockReturnValue('https://supabase.co');
-
-      const strategy = new JwtStrategy(configService);
+    it('should initialize successfully', () => {
+      const strategy = new JwtStrategy(mockConfig);
 
       expect(strategy).toBeDefined();
-      expect(configService.get).toHaveBeenCalledWith('SUPABASE_JWKS_URL');
     });
 
-    it('should throw an error if SUPABASE_JWKS_URL is missing', () => {
-      configService.get.mockReturnValue(undefined);
+    it('should use jwksUri from Config', () => {
+      const { passportJwtSecret } = jest.requireMock('jwks-rsa');
 
-      expect(() => new JwtStrategy(configService)).toThrow(
-        'SUPABASE_JWKS_URL is not configured',
+      new JwtStrategy(mockConfig);
+
+      expect(passportJwtSecret).toHaveBeenCalledWith(
+        expect.objectContaining({
+          jwksUri: mockConfig.supabase.jwksUrl,
+        }),
       );
     });
   });
@@ -47,8 +46,7 @@ describe('JwtStrategy', () => {
     let strategy: JwtStrategy;
 
     beforeEach(() => {
-      configService.get.mockReturnValue('https://supabase.co');
-      strategy = new JwtStrategy(configService);
+      strategy = new JwtStrategy(mockConfig);
     });
 
     it('should return CurrentUser when payload is valid', () => {

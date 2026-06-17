@@ -5,16 +5,16 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { logResponseBody } from './common/middleware/logger.middleware';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { Config } from './config/config';
 
 async function bootstrap() {
-  const port = process.env.PORT ?? 9001;
-
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     bodyParser: true,
     rawBody: true,
   });
   const logger = app.get(Logger);
+  const config = app.get(Config);
 
   app.use(logResponseBody);
   app.useLogger(logger);
@@ -30,10 +30,10 @@ async function bootstrap() {
     }),
   );
 
-  app.enableShutdownHooks(); // Ensures onModuleDestroy events run when your server closes
+  app.enableShutdownHooks();
 
-  await app.listen(port);
-  logger.log(`Backend service - account - is running on port: ${port}`);
+  await app.listen(config.port);
+  logger.log(`Backend service - account - is running on port: ${config.port}`);
 }
 
 bootstrap();

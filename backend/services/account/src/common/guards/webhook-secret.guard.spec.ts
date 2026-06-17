@@ -1,9 +1,10 @@
-import {
-  ExecutionContext,
-  UnauthorizedException,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { WebhookSecretGuard } from './webhook-secret.guard';
+import { Config } from '../../config/config';
+
+const mockConfig = {
+  webhookSecret: 'valid-secret',
+} as Config;
 
 const mockExecutionContext = (secret: string | undefined): ExecutionContext =>
   ({
@@ -18,12 +19,11 @@ describe('WebhookSecretGuard', () => {
   let guard: WebhookSecretGuard;
 
   beforeEach(() => {
-    guard = new WebhookSecretGuard();
-    process.env.WEBHOOK_SECRET = 'valid-secret';
+    guard = new WebhookSecretGuard(mockConfig);
   });
 
   afterEach(() => {
-    delete process.env.WEBHOOK_SECRET;
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -52,23 +52,5 @@ describe('WebhookSecretGuard', () => {
     const context = mockExecutionContext(undefined);
 
     expect(() => guard.canActivate(context)).toThrow(UnauthorizedException);
-  });
-
-  it('should throw InternalServerErrorException when WEBHOOK_SECRET is not set', () => {
-    delete process.env.WEBHOOK_SECRET;
-    const context = mockExecutionContext('valid-secret');
-
-    expect(() => guard.canActivate(context)).toThrow(
-      InternalServerErrorException,
-    );
-  });
-
-  it('should throw InternalServerErrorException with correct message when WEBHOOK_SECRET is not set', () => {
-    delete process.env.WEBHOOK_SECRET;
-    const context = mockExecutionContext('valid-secret');
-
-    expect(() => guard.canActivate(context)).toThrow(
-      'WEBHOOK_SECRET is not configured',
-    );
   });
 });
