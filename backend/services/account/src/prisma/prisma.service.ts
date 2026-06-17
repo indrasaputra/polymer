@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '../../generated/prisma/client';
 import { Pool, type PoolConfig } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Config } from '../config/config';
 
 @Injectable()
 export class PrismaService
@@ -11,16 +11,11 @@ export class PrismaService
 {
   private readonly pool: Pool;
 
-  constructor(configService: ConfigService) {
-    const dbUrl = configService.get<string>('DATABASE_URL');
-    if (!dbUrl) {
-      throw new Error('DATABASE_URL environment variable is missing!');
-    }
-
-    const schema = configService.get<string>('DATABASE_SCHEMA') ?? 'public';
+  constructor() {
+    const schema = Config.DATABASE_SCHEMA;
 
     const poolConfig: PoolConfig = {
-      connectionString: dbUrl,
+      connectionString: Config.DATABASE_URL,
     };
     const pool = new Pool(poolConfig);
     const adapter = new PrismaPg(pool, { schema });

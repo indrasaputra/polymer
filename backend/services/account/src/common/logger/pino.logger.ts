@@ -1,11 +1,12 @@
-import { pino } from 'pino';
+// import pino, { transport } from 'pino';
+import pino from 'pino';
 import { Options } from 'pino-http';
 import { uuidv7 } from '@kripod/uuidv7';
 import { IncomingMessage } from 'http';
-import { isDevelopment } from '../../config/config';
+import { isDevelopment, Config } from '../../config/config';
 
 const pinoLogger = pino({
-  name: process.env.SERVICE_NAME,
+  name: Config.SERVICE_NAME,
   level: isDevelopment ? 'debug' : 'info',
   formatters: {
     level: (label: string) => {

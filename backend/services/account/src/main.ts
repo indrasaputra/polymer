@@ -1,3 +1,4 @@
+import './common/observability/telemetry';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
@@ -5,10 +6,9 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { logResponseBody } from './common/middleware/logger.middleware';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { Config } from './config/config';
 
 async function bootstrap() {
-  const port = process.env.PORT ?? 9001;
-
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
     bodyParser: true,
@@ -32,8 +32,8 @@ async function bootstrap() {
 
   app.enableShutdownHooks(); // Ensures onModuleDestroy events run when your server closes
 
-  await app.listen(port);
-  logger.log(`Backend service - account - is running on port: ${port}`);
+  await app.listen(Config.PORT);
+  logger.log(`Backend service - account - is running on port: ${Config.PORT}`);
 }
 
 bootstrap();
