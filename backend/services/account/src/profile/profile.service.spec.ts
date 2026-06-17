@@ -1,40 +1,51 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SignupService } from './signup.service';
+import { ProfileService } from './profile.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { SignupWebhookDto } from './dto/signup.dto';
+import { ProfileWebhookDto, ProfileResponseDto } from './dto/profile.dto';
+
+const mockProfile = {
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+  email: 'john.doe@example.com',
+  firstName: 'John',
+  lastName: 'Doe',
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  deletedAt: null,
+};
 
 const mockPrismaService = {
   profile: {
     upsert: jest.fn().mockResolvedValue(undefined),
+    findUnique: jest.fn(),
   },
 };
 
-describe('SignupService', () => {
-  let service: SignupService;
+describe('ProfileService', () => {
+  let service: ProfileService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        SignupService,
+        ProfileService,
         { provide: PrismaService, useValue: mockPrismaService },
       ],
     }).compile();
 
-    service = module.get<SignupService>(SignupService);
+    service = module.get<ProfileService>(ProfileService);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('handleWebhook', () => {
+  describe('handleCreateProfileWebhook', () => {
     it('should create profile with extracted name from email', async () => {
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'john.doe@example.com',
       };
 
-      await service.handleWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
 
       expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
         where: { id: 'uuid-123' },
@@ -50,12 +61,12 @@ describe('SignupService', () => {
     });
 
     it('should create profile with null lastName for single name email', async () => {
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'johndoe@example.com',
       };
 
-      await service.handleWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
 
       expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
         where: { id: 'uuid-123' },
@@ -75,24 +86,56 @@ describe('SignupService', () => {
         new Error('DB error'),
       );
 
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'john.doe@example.com',
       };
 
-      await expect(service.handleWebhook(payload)).rejects.toThrow('DB error');
+      await expect(service.handleCreateProfileWebhook(payload)).rejects.toThrow(
+        'DB error',
+      );
     });
 
     it('should be idempotent on duplicate webhook', async () => {
-      const payload: SignupWebhookDto = {
+      const payload: ProfileWebhookDto = {
         id: 'uuid-123',
         email: 'john.doe@example.com',
       };
 
-      await service.handleWebhook(payload);
-      await service.handleWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
+      await service.handleCreateProfileWebhook(payload);
 
       expect(mockPrismaService.profile.upsert).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return ProfileResponseDto when profile exists', async () => {
+      mockPrismaService.profile.findUnique.mockResolvedValueOnce(mockProfile);
+
+      const result = await service.findOne(mockProfile.id);
+
+      expect(mockPrismaService.profile.findUnique).toHaveBeenCalledWith({
+        where: { id: mockProfile.id },
+      });
+      expect(result).toBeInstanceOf(ProfileResponseDto);
+      expect(result).toEqual(ProfileResponseDto.fromOrm(mockProfile));
+    });
+
+    it('should return null when profile does not exist', async () => {
+      mockPrismaService.profile.findUnique.mockResolvedValueOnce(null);
+
+      const result = await service.findOne(mockProfile.id);
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw if prisma throws', async () => {
+      mockPrismaService.profile.findUnique.mockRejectedValueOnce(
+        new Error('DB error'),
+      );
+
+      await expect(service.findOne(mockProfile.id)).rejects.toThrow('DB error');
     });
   });
 
@@ -127,9 +170,9 @@ describe('SignupService', () => {
     it.each(cases)(
       '$email → firstName: $expected.firstName, lastName: $expected.lastName',
       async ({ email, expected }) => {
-        const payload: SignupWebhookDto = { id: 'uuid-123', email };
+        const payload: ProfileWebhookDto = { id: 'uuid-123', email };
 
-        await service.handleWebhook(payload);
+        await service.handleCreateProfileWebhook(payload);
 
         expect(mockPrismaService.profile.upsert).toHaveBeenCalledWith({
           where: { id: 'uuid-123' },

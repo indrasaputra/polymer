@@ -1,17 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { SignupWebhookDto } from './dto/signup.dto';
+import { ProfileResponseDto, ProfileWebhookDto } from './dto/profile.dto';
 
 @Injectable()
-export class SignupService {
+export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async handleWebhook(payload: SignupWebhookDto): Promise<void> {
+  async handleCreateProfileWebhook(payload: ProfileWebhookDto): Promise<void> {
     const id = payload.id;
     const email = payload.email;
     const { firstName, lastName } = this.extractNameFromEmail(payload.email);
 
     await this.createProfile(id, email, firstName, lastName);
+  }
+
+  async findOne(id: string): Promise<ProfileResponseDto | null> {
+    const profile = await this.prisma.profile.findUnique({ where: { id: id } });
+    if (!profile) {
+      return null;
+    }
+    return ProfileResponseDto.fromOrm(profile);
   }
 
   private async createProfile(
