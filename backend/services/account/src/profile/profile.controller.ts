@@ -32,7 +32,7 @@ export class ProfileController {
   @HttpCode(200)
   async getProfile(
     @CurrentUserDecorator() user: CurrentUser,
-  ): Promise<ProfileResponseDto | null> {
+  ): Promise<ProfileResponseDto> {
     const profile = await this.ProfileService.findOne(user.id);
     if (!profile) {
       throw new NotFoundException(`User with id ${user.id} not found`);
