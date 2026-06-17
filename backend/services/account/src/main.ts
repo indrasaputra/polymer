@@ -15,6 +15,7 @@ async function bootstrap() {
     rawBody: true,
   });
   const logger = app.get(Logger);
+  const config = app.get(Config);
 
   app.use(logResponseBody);
   app.useLogger(logger);
@@ -32,8 +33,8 @@ async function bootstrap() {
 
   app.enableShutdownHooks(); // Ensures onModuleDestroy events run when your server closes
 
-  await app.listen(Config.PORT);
-  logger.log(`Backend service - account - is running on port: ${Config.PORT}`);
+  await app.listen(config.port);
+  logger.log(`Backend service - account - is running on port: ${config.port}`);
 }
 
 bootstrap();

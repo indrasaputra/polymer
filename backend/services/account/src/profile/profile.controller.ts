@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ProfileService } from './profile.service';
 import { ProfileResponseDto, ProfileWebhookDto } from './dto/profile.dto';
-import { WebhookSecretGuard } from '../guards/webhook-secret/webhook-secret.guard';
+import { WebhookSecretGuard } from '../common/guards/webhook-secret.guard';
 import { Public } from '../common/decorators/auth-type.decorator';
 import { CurrentUserDecorator } from '../common/decorators/current-user.decorator';
 import { CurrentUser } from '../common/dto/current-user.dto';

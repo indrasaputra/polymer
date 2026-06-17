@@ -11,10 +11,9 @@ import {
 import { logs } from '@opentelemetry/api-logs';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { Config } from '../../config/config';
 
 const resource = resourceFromAttributes({
-  [ATTR_SERVICE_NAME]: Config.SERVICE_NAME,
+  [ATTR_SERVICE_NAME]: process.env.SERVICE_NAME,
 });
 
 // Logs setup
@@ -22,7 +21,7 @@ const loggerProvider = new LoggerProvider({
   resource,
   processors: [
     new BatchLogRecordProcessor(
-      new OTLPLogExporter({ url: Config.OTEL_EXPORTER_ENDPOINT }),
+      new OTLPLogExporter({ url: process.env.OTEL_EXPORTER_ENDPOINT }),
     ),
   ],
 });
@@ -30,9 +29,13 @@ logs.setGlobalLoggerProvider(loggerProvider);
 
 const sdk = new NodeSDK({
   resource,
-  traceExporter: new OTLPTraceExporter({ url: Config.OTEL_EXPORTER_ENDPOINT }),
+  traceExporter: new OTLPTraceExporter({
+    url: process.env.OTEL_EXPORTER_ENDPOINT,
+  }),
   metricReader: new PeriodicExportingMetricReader({
-    exporter: new OTLPMetricExporter({ url: Config.OTEL_EXPORTER_ENDPOINT }),
+    exporter: new OTLPMetricExporter({
+      url: process.env.OTEL_EXPORTER_ENDPOINT,
+    }),
   }),
   instrumentations: [getNodeAutoInstrumentations()],
 });

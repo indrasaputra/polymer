@@ -1,70 +1,132 @@
-// config.spec.ts
+import { validateSync } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
+import { Config } from './config';
 
-describe('config', () => {
-  const ORIGINAL_ENV = process.env.ENV;
+const validConfig = {
+  env: 'development',
+  serviceName: 'account',
+  port: 9001,
+  webhookSecret: 'webhook-secret',
+  postgre: {
+    url: 'postgresql://postgres:postgres@localhost:54322/postgres',
+    schema: 'account',
+  },
+  supabase: {
+    jwksUrl: 'http://localhost:54321/auth/v1/.well-known/jwks.json',
+  },
+  otel: {
+    exporterEndpoint: 'http://localhost:4317',
+  },
+};
 
-  afterEach(() => {
-    if (ORIGINAL_ENV === undefined) {
-      delete process.env.ENV;
-    } else {
-      process.env.ENV = ORIGINAL_ENV;
-    }
-    jest.resetModules();
-  });
+function buildConfig(overrides: Record<string, unknown> = {}): Config {
+  return plainToInstance(Config, { ...validConfig, ...overrides });
+}
 
-  describe('ENV', () => {
-    it('should default to "development" if ENV is not set', async () => {
-      delete process.env.ENV;
-      const { ENV } = await import('./config.js');
-      expect(ENV).toBe('development');
+describe('Config', () => {
+  describe('validation', () => {
+    it('should pass validation with valid config', () => {
+      const config = buildConfig();
+
+      const errors = validateSync(config);
+
+      expect(errors).toHaveLength(0);
     });
 
-    it('should use the value of process.env.ENV when set', async () => {
-      process.env.ENV = 'production';
-      const { ENV } = await import('./config.js');
-      expect(ENV).toBe('production');
+    it('should fail validation when webhookSecret is missing', () => {
+      const config = buildConfig({ webhookSecret: undefined });
+
+      const errors = validateSync(config);
+
+      expect(errors.some((e) => e.property === 'webhookSecret')).toBe(true);
+    });
+
+    it('should fail validation when env is not one of allowed values', () => {
+      const config = buildConfig({ env: 'staging-invalid' });
+
+      const errors = validateSync(config);
+
+      expect(errors.some((e) => e.property === 'env')).toBe(true);
+    });
+
+    it('should fail validation when postgre.url is missing', () => {
+      const config = buildConfig({ postgre: { schema: 'account' } });
+
+      const errors = validateSync(config);
+
+      expect(errors.some((e) => e.property === 'postgre')).toBe(true);
+    });
+
+    it('should fail validation when supabase.jwksUrl is missing', () => {
+      const config = buildConfig({ supabase: {} });
+
+      const errors = validateSync(config);
+
+      expect(errors.some((e) => e.property === 'supabase')).toBe(true);
+    });
+
+    it('should fail validation when otel.exporterEndpoint is missing', () => {
+      const config = buildConfig({ otel: { enabled: false } });
+
+      const errors = validateSync(config);
+
+      expect(errors.some((e) => e.property === 'otel')).toBe(true);
+    });
+
+    it('should use default values when optional fields are omitted', () => {
+      const config = plainToInstance(Config, {
+        webhookSecret: 'secret',
+        postgre: { url: 'postgresql://localhost:5432/postgres' },
+        supabase: { jwksUrl: 'http://localhost/jwks.json' },
+        otel: { exporterEndpoint: 'http://localhost:4317' },
+      });
+
+      expect(config.env).toBe('development');
+      expect(config.serviceName).toBe('account');
+      expect(config.port).toBe(9001);
+      expect(config.postgre.schema).toBe('public');
     });
   });
 
   describe('isDevelopment', () => {
-    it('should be true when ENV is "development"', async () => {
-      process.env.ENV = 'development';
-      const { isDevelopment } = await import('./config.js');
-      expect(isDevelopment).toBe(true);
+    it('should return true when env is development', () => {
+      const config = buildConfig({ env: 'development' });
+
+      expect(config.isDevelopment).toBe(true);
     });
 
-    it('should be false when ENV is not "development"', async () => {
-      process.env.ENV = 'production';
-      const { isDevelopment } = await import('./config.js');
-      expect(isDevelopment).toBe(false);
+    it('should return false when env is not development', () => {
+      const config = buildConfig({ env: 'production' });
+
+      expect(config.isDevelopment).toBe(false);
     });
   });
 
   describe('isStaging', () => {
-    it('should be true when ENV is "staging"', async () => {
-      process.env.ENV = 'staging';
-      const { isStaging } = await import('./config.js');
-      expect(isStaging).toBe(true);
+    it('should return true when env is staging', () => {
+      const config = buildConfig({ env: 'staging' });
+
+      expect(config.isStaging).toBe(true);
     });
 
-    it('should be false when ENV is not "staging"', async () => {
-      process.env.ENV = 'production';
-      const { isStaging } = await import('./config.js');
-      expect(isStaging).toBe(false);
+    it('should return false when env is not staging', () => {
+      const config = buildConfig({ env: 'development' });
+
+      expect(config.isStaging).toBe(false);
     });
   });
 
   describe('isProduction', () => {
-    it('should be true when ENV is "production"', async () => {
-      process.env.ENV = 'production';
-      const { isProduction } = await import('./config.js');
-      expect(isProduction).toBe(true);
+    it('should return true when env is production', () => {
+      const config = buildConfig({ env: 'production' });
+
+      expect(config.isProduction).toBe(true);
     });
 
-    it('should be false when ENV is not "production"', async () => {
-      process.env.ENV = 'development';
-      const { isProduction } = await import('./config.js');
-      expect(isProduction).toBe(false);
+    it('should return false when env is not production', () => {
+      const config = buildConfig({ env: 'development' });
+
+      expect(config.isProduction).toBe(false);
     });
   });
 });

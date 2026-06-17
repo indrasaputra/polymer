@@ -1,4 +1,5 @@
 import { PrismaService } from './prisma.service';
+import { Config } from '../config/config';
 
 jest.mock('pg', () => ({
   Pool: jest.fn().mockImplementation(() => ({
@@ -17,12 +18,12 @@ jest.mock('../../generated/prisma/client', () => ({
   }),
 }));
 
-jest.mock('../config/config', () => ({
-  Config: {
-    DATABASE_URL: 'postgresql://postgres:postgres@localhost:54322/postgres',
-    DATABASE_SCHEMA: 'account',
+const mockConfig = {
+  postgre: {
+    url: 'postgresql://postgres:postgres@localhost:54322/postgres',
+    schema: 'account',
   },
-}));
+} as Config;
 
 describe('PrismaService', () => {
   afterEach(() => {
@@ -31,23 +32,23 @@ describe('PrismaService', () => {
 
   describe('constructor', () => {
     it('should instantiate successfully', () => {
-      expect(() => new PrismaService()).not.toThrow();
+      expect(() => new PrismaService(mockConfig)).not.toThrow();
     });
 
-    it('should use DATABASE_SCHEMA from Config', () => {
+    it('should use schema from config.postgre.schema', () => {
       const { PrismaPg } = jest.requireMock('@prisma/adapter-pg');
 
-      new PrismaService();
+      new PrismaService(mockConfig);
 
       expect(PrismaPg).toHaveBeenCalledWith(expect.anything(), {
         schema: 'account',
       });
     });
 
-    it('should use DATABASE_URL from Config for pool connection', () => {
+    it('should use url from config.postgre.url for pool connection', () => {
       const { Pool } = jest.requireMock('pg');
 
-      new PrismaService();
+      new PrismaService(mockConfig);
 
       expect(Pool).toHaveBeenCalledWith({
         connectionString:
@@ -58,7 +59,7 @@ describe('PrismaService', () => {
 
   describe('onModuleInit', () => {
     it('should call $connect', async () => {
-      const service = new PrismaService();
+      const service = new PrismaService(mockConfig);
       await service.onModuleInit();
 
       expect(service.$connect).toHaveBeenCalled();
@@ -71,7 +72,7 @@ describe('PrismaService', () => {
       const poolEndSpy = jest.fn().mockResolvedValue(undefined);
       Pool.mockImplementation(() => ({ end: poolEndSpy }));
 
-      const service = new PrismaService();
+      const service = new PrismaService(mockConfig);
       await service.onModuleDestroy();
 
       expect(service.$disconnect).toHaveBeenCalled();

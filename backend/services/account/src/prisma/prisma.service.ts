@@ -11,11 +11,11 @@ export class PrismaService
 {
   private readonly pool: Pool;
 
-  constructor() {
-    const schema = Config.DATABASE_SCHEMA;
+  constructor(config: Config) {
+    const schema = config.postgre.schema;
 
     const poolConfig: PoolConfig = {
-      connectionString: Config.DATABASE_URL,
+      connectionString: config.postgre.url,
     };
     const pool = new Pool(poolConfig);
     const adapter = new PrismaPg(pool, { schema });

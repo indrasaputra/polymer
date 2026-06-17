@@ -1,11 +1,10 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { WebhookSecretGuard } from './webhook-secret.guard';
+import { Config } from '../../config/config';
 
-jest.mock('../../config/config', () => ({
-  Config: {
-    WEBHOOK_SECRET: 'valid-secret',
-  },
-}));
+const mockConfig = {
+  webhookSecret: 'valid-secret',
+} as Config;
 
 const mockExecutionContext = (secret: string | undefined): ExecutionContext =>
   ({
@@ -20,7 +19,7 @@ describe('WebhookSecretGuard', () => {
   let guard: WebhookSecretGuard;
 
   beforeEach(() => {
-    guard = new WebhookSecretGuard();
+    guard = new WebhookSecretGuard(mockConfig);
   });
 
   afterEach(() => {

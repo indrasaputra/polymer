@@ -48,6 +48,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "jwks-rsa": "^4.0.1",
+    "nest-typed-config": "^2.10.1",
     "nestjs-pino": "^4.6.1",
     "passport-jwt": "^4.0.1",
     "pg": "^8.21.0",
@@ -84,5 +85,28 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
+  },
+  "jest": {
+    "setupFiles": [
+      "reflect-metadata"
+    ],
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
   }
 }

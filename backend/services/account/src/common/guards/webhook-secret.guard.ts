@@ -9,6 +9,8 @@ import { Config } from '../../config/config';
 
 @Injectable()
 export class WebhookSecretGuard implements CanActivate {
+  constructor(private readonly config: Config) {}
+
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
     const secret = request.header('x-webhook-secret');
@@ -16,7 +18,7 @@ export class WebhookSecretGuard implements CanActivate {
     if (
       !secret ||
       typeof secret !== 'string' ||
-      secret !== Config.WEBHOOK_SECRET
+      secret !== this.config.webhookSecret
     ) {
       throw new UnauthorizedException('Secret is invalid');
     }

@@ -1,40 +1,76 @@
-import * as dotenv from 'dotenv';
-dotenv.config();
+import {
+  IsString,
+  IsIn,
+  IsNumber,
+  IsDefined,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
-export const ENV = process.env.ENV ?? 'development';
-export const isDevelopment = ENV === 'development';
-export const isStaging = ENV === 'staging';
-export const isProduction = ENV === 'production';
+export class Postgre {
+  @IsString()
+  @IsDefined()
+  readonly url: string;
 
-function requireEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing required environment variable: ${key}`);
+  @IsString()
+  @IsDefined()
+  readonly schema: string = 'public';
+}
+
+export class Supabase {
+  @IsString()
+  @IsDefined()
+  readonly jwksUrl: string;
+}
+
+export class OpenTelemetry {
+  @IsString()
+  @IsDefined()
+  readonly exporterEndpoint: string;
+}
+
+export class Config {
+  @IsIn(['development', 'production', 'test'])
+  @IsDefined()
+  readonly env: string = 'development';
+
+  get isDevelopment(): boolean {
+    return this.env === 'development';
   }
-  return value;
+
+  get isStaging(): boolean {
+    return this.env === 'staging';
+  }
+
+  get isProduction(): boolean {
+    return this.env === 'production';
+  }
+
+  @IsString()
+  @IsDefined()
+  readonly serviceName: string = 'account';
+
+  @IsNumber()
+  @IsDefined()
+  @Type(() => Number)
+  readonly port: number = 9001;
+
+  @IsString()
+  @IsDefined()
+  readonly webhookSecret: string;
+
+  @Type(() => Postgre)
+  @IsDefined()
+  @ValidateNested()
+  readonly postgre: Postgre;
+
+  @Type(() => Supabase)
+  @IsDefined()
+  @ValidateNested()
+  readonly supabase: Supabase;
+
+  @Type(() => OpenTelemetry)
+  @IsDefined()
+  @ValidateNested()
+  readonly otel: OpenTelemetry;
 }
-
-function optionalEnv(key: string, defaultValue: any): string {
-  return process.env[key] ?? defaultValue;
-}
-
-export const Config = {
-  // Service
-  ENV: optionalEnv('ENV', 'development'),
-  PORT: optionalEnv('PORT', 9001),
-  SERVICE_NAME: requireEnv('SERVICE_NAME'),
-
-  // Webhook
-  WEBHOOK_SECRET: requireEnv('WEBHOOK_SECRET'),
-
-  // Database
-  DATABASE_URL: requireEnv('DATABASE_URL'),
-  DATABASE_SCHEMA: optionalEnv('DATABASE_SCHEMA', 'public'),
-
-  // Supabase
-  SUPABASE_JWKS_URL: requireEnv('SUPABASE_JWKS_URL'),
-
-  // OpenTelemetry
-  OTEL_ENABLED: optionalEnv('OTEL_ENABLED', false),
-  OTEL_EXPORTER_ENDPOINT: requireEnv('OTEL_EXPORTER_ENDPOINT'),
-} as const;

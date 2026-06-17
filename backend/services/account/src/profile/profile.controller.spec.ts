@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ValidationPipe, NotFoundException } from '@nestjs/common';
 import { ProfileController } from './profile.controller';
 import { ProfileService } from './profile.service';
-import { WebhookSecretGuard } from '../guards/webhook-secret/webhook-secret.guard';
+import { WebhookSecretGuard } from '../common/guards/webhook-secret.guard';
 import { ProfileWebhookDto, ProfileResponseDto } from './dto/profile.dto';
 import { CurrentUser } from '../common/dto/current-user.dto';
 import { JwtAuthGuard } from '../common/guards/jwt.guards';

@@ -8,7 +8,7 @@ import { Config } from '../../config/config';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(config: Config) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -16,7 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: Config.SUPABASE_JWKS_URL,
+        jwksUri: config.supabase.jwksUrl,
       }),
       algorithms: ['ES256'],
     });

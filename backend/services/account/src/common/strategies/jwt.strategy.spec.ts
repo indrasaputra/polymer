@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { Config } from '../../config/config';
 
 // Mock 'jwks-rsa' to completely block outbound network requests
 jest.mock('jwks-rsa', () => ({
@@ -7,11 +8,11 @@ jest.mock('jwks-rsa', () => ({
   }),
 }));
 
-jest.mock('../../config/config', () => ({
-  Config: {
-    SUPABASE_JWKS_URL: 'http://localhost:54321/auth/v1/.well-known/jwks.json',
+const mockConfig = {
+  supabase: {
+    jwksUrl: 'http://localhost:54321/auth/v1/.well-known/jwks.json',
   },
-}));
+} as Config;
 
 import { JwtStrategy } from './jwt.strategy';
 import { JwtToken } from '../dto/jwt-token.interface';
@@ -23,20 +24,19 @@ describe('JwtStrategy', () => {
 
   describe('Constructor Initialization', () => {
     it('should initialize successfully', () => {
-      const strategy = new JwtStrategy();
+      const strategy = new JwtStrategy(mockConfig);
 
       expect(strategy).toBeDefined();
     });
 
     it('should use jwksUri from Config', () => {
       const { passportJwtSecret } = jest.requireMock('jwks-rsa');
-      const { Config } = jest.requireActual('../../config/config');
 
-      new JwtStrategy();
+      new JwtStrategy(mockConfig);
 
       expect(passportJwtSecret).toHaveBeenCalledWith(
         expect.objectContaining({
-          jwksUri: Config.SUPABASE_JWKS_URL,
+          jwksUri: mockConfig.supabase.jwksUrl,
         }),
       );
     });
@@ -46,7 +46,7 @@ describe('JwtStrategy', () => {
     let strategy: JwtStrategy;
 
     beforeEach(() => {
-      strategy = new JwtStrategy();
+      strategy = new JwtStrategy(mockConfig);
     });
 
     it('should return CurrentUser when payload is valid', () => {
