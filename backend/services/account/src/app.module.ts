@@ -8,6 +8,7 @@ import { JwtAuthGuard } from './common/guards/jwt.guards';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './common/strategies/jwt.strategy';
 import { Config } from './config/config';
+import { TelemetryService } from './common/observability/telemetry.service';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { Config } from './config/config';
   ],
   providers: [
     JwtStrategy,
+    TelemetryService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

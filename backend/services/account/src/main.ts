@@ -1,4 +1,3 @@
-import './common/observability/telemetry';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { Logger, LoggerErrorInterceptor } from 'nestjs-pino';
@@ -31,7 +30,7 @@ async function bootstrap() {
     }),
   );
 
-  app.enableShutdownHooks(); // Ensures onModuleDestroy events run when your server closes
+  app.enableShutdownHooks();
 
   await app.listen(config.port);
   logger.log(`Backend service - account - is running on port: ${config.port}`);

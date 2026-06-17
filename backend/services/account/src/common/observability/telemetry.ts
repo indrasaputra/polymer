@@ -12,38 +12,55 @@ import { logs } from '@opentelemetry/api-logs';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 
-const resource = resourceFromAttributes({
-  [ATTR_SERVICE_NAME]: process.env.SERVICE_NAME,
-});
+export interface TelemetryOptions {
+  enabled: boolean;
+  serviceName: string;
+  exporterEndpoint: string;
+}
 
-// Logs setup
-const loggerProvider = new LoggerProvider({
-  resource,
-  processors: [
-    new BatchLogRecordProcessor(
-      new OTLPLogExporter({ url: process.env.OTEL_EXPORTER_ENDPOINT }),
-    ),
-  ],
-});
-logs.setGlobalLoggerProvider(loggerProvider);
+export interface TelemetryHandle {
+  shutdown: () => Promise<void>;
+}
 
-const sdk = new NodeSDK({
-  resource,
-  traceExporter: new OTLPTraceExporter({
-    url: process.env.OTEL_EXPORTER_ENDPOINT,
-  }),
-  metricReader: new PeriodicExportingMetricReader({
-    exporter: new OTLPMetricExporter({
-      url: process.env.OTEL_EXPORTER_ENDPOINT,
+export function startTelemetry(
+  options: TelemetryOptions,
+): TelemetryHandle | null {
+  console.log('Telemetry options:', options);
+
+  if (!options.enabled) {
+    console.log('Telemetry disabled, skipping');
+    return null;
+  }
+
+  const resource = resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: options.serviceName,
+  });
+
+  const loggerProvider = new LoggerProvider({
+    resource,
+    processors: [
+      new BatchLogRecordProcessor(
+        new OTLPLogExporter({ url: options.exporterEndpoint }),
+      ),
+    ],
+  });
+  logs.setGlobalLoggerProvider(loggerProvider);
+
+  const sdk = new NodeSDK({
+    resource,
+    traceExporter: new OTLPTraceExporter({ url: options.exporterEndpoint }),
+    metricReader: new PeriodicExportingMetricReader({
+      exporter: new OTLPMetricExporter({ url: options.exporterEndpoint }),
     }),
-  }),
-  instrumentations: [getNodeAutoInstrumentations()],
-});
+    instrumentations: [getNodeAutoInstrumentations()],
+  });
 
-sdk.start();
+  sdk.start();
+  console.log('OTel SDK started');
 
-process.on('SIGTERM', () => {
-  Promise.all([sdk.shutdown(), loggerProvider.shutdown()]).finally(() =>
-    process.exit(0),
-  );
-});
+  return {
+    shutdown: async () => {
+      await Promise.all([sdk.shutdown(), loggerProvider.shutdown()]);
+    },
+  };
+}

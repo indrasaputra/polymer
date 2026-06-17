@@ -129,4 +129,25 @@ describe('Config', () => {
       expect(config.isProduction).toBe(false);
     });
   });
+
+  describe('transform', () => {
+    it.each([
+      ['true', true],
+      ['1', true],
+      ['yes', true],
+      ['y', true],
+      ['false', false],
+      ['0', false],
+      ['no', false],
+      ['n', false],
+      [undefined, false],
+    ])('should parse %s as %s', (input, expected) => {
+      const config = plainToInstance(Config, {
+        ...validConfig,
+        otel: { enabled: input, exporterEndpoint: 'http://localhost:4317' },
+      });
+
+      expect(config.otel.enabled).toBe(expected);
+    });
+  });
 });
