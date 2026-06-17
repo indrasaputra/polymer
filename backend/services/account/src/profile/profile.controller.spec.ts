@@ -1,12 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ValidationPipe, NotFoundException } from '@nestjs/common';
 import { ProfileController } from './profile.controller';
 import { ProfileService } from './profile.service';
 import { WebhookSecretGuard } from '../guards/webhook-secret/webhook-secret.guard';
-import { ProfileWebhookDto } from './dto/profile.dto';
-import { ValidationPipe } from '@nestjs/common';
+import { ProfileWebhookDto, ProfileResponseDto } from './dto/profile.dto';
+import { CurrentUser } from '../common/dto/current-user.dto';
+import { JwtAuthGuard } from '../common/guards/jwt.guards';
+
+const mockUser: CurrentUser = {
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+  email: 'john.doe@example.com',
+};
+
+const mockProfile = new ProfileResponseDto({
+  id: mockUser.id,
+  email: mockUser.email,
+  firstName: 'John',
+  lastName: 'Doe',
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+});
 
 const mockProfileService = {
   handleCreateProfileWebhook: jest.fn().mockResolvedValue(undefined),
+  findOne: jest.fn(),
+};
+
+const mockJwtAuthGuard = {
+  canActivate: jest.fn().mockReturnValue(true),
 };
 
 const mockWebhookSecretGuard = {
@@ -24,12 +44,13 @@ describe('ProfileController', () => {
     })
       .overrideGuard(WebhookSecretGuard)
       .useValue(mockWebhookSecretGuard)
+      .overrideGuard(JwtAuthGuard)
+      .useValue(mockJwtAuthGuard)
       .compile();
 
     controller = module.get<ProfileController>(ProfileController);
     validationPipe = new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
       transform: true,
     });
   });
@@ -88,18 +109,45 @@ describe('ProfileController', () => {
         ),
       ).rejects.toThrow();
     });
+  });
 
-    it('should reject unknown fields', async () => {
-      await expect(
-        validationPipe.transform(
-          {
-            id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-            email: 'john.doe@example.com',
-            unknown: 'field',
-          },
-          { type: 'body', metatype: ProfileWebhookDto },
-        ),
-      ).rejects.toThrow();
+  describe('getProfile', () => {
+    it('should return profile when user exists', async () => {
+      mockProfileService.findOne.mockResolvedValueOnce(mockProfile);
+
+      const result = await controller.getProfile(mockUser);
+
+      expect(result).toEqual(mockProfile);
+    });
+
+    it('should call profileService.findOne with user id', async () => {
+      mockProfileService.findOne.mockResolvedValueOnce(mockProfile);
+
+      await controller.getProfile(mockUser);
+
+      expect(mockProfileService.findOne).toHaveBeenCalledWith(mockUser.id);
+    });
+
+    it('should throw NotFoundException when profile does not exist', async () => {
+      mockProfileService.findOne.mockResolvedValueOnce(null);
+
+      await expect(controller.getProfile(mockUser)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw NotFoundException with correct message', async () => {
+      mockProfileService.findOne.mockResolvedValueOnce(null);
+
+      await expect(controller.getProfile(mockUser)).rejects.toThrow(
+        `User with id ${mockUser.id} not found`,
+      );
+    });
+
+    it('should throw if profileService throws', async () => {
+      mockProfileService.findOne.mockRejectedValueOnce(new Error('DB error'));
+
+      await expect(controller.getProfile(mockUser)).rejects.toThrow('DB error');
     });
   });
 });

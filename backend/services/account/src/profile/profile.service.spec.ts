@@ -1,11 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProfileService } from './profile.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { ProfileWebhookDto } from './dto/profile.dto';
+import { ProfileWebhookDto, ProfileResponseDto } from './dto/profile.dto';
+
+const mockProfile = {
+  id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+  email: 'john.doe@example.com',
+  firstName: 'John',
+  lastName: 'Doe',
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  deletedAt: null,
+};
 
 const mockPrismaService = {
   profile: {
     upsert: jest.fn().mockResolvedValue(undefined),
+    findUnique: jest.fn(),
   },
 };
 
@@ -95,6 +106,36 @@ describe('ProfileService', () => {
       await service.handleCreateProfileWebhook(payload);
 
       expect(mockPrismaService.profile.upsert).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return ProfileResponseDto when profile exists', async () => {
+      mockPrismaService.profile.findUnique.mockResolvedValueOnce(mockProfile);
+
+      const result = await service.findOne(mockProfile.id);
+
+      expect(mockPrismaService.profile.findUnique).toHaveBeenCalledWith({
+        where: { id: mockProfile.id },
+      });
+      expect(result).toBeInstanceOf(ProfileResponseDto);
+      expect(result).toEqual(ProfileResponseDto.fromOrm(mockProfile));
+    });
+
+    it('should return null when profile does not exist', async () => {
+      mockPrismaService.profile.findUnique.mockResolvedValueOnce(null);
+
+      const result = await service.findOne(mockProfile.id);
+
+      expect(result).toBeNull();
+    });
+
+    it('should throw if prisma throws', async () => {
+      mockPrismaService.profile.findUnique.mockRejectedValueOnce(
+        new Error('DB error'),
+      );
+
+      await expect(service.findOne(mockProfile.id)).rejects.toThrow('DB error');
     });
   });
 
