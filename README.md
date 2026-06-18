@@ -20,3 +20,5 @@ My playground to implement everything I find it interesting
 ## Atlas 1.2.0
 
 ### Sqlfluff 4.2.2
+
+### Mockery v3.7.1

@@ -1,0 +1,27 @@
+all: true
+# dir: '{{.InterfaceDir}}'
+dir: '{{.ConfigDir}}/test/mock/{{trimPrefix "internal/" .InterfaceDirRelative}}'
+filename: 'mock_{{ .InterfaceFile | base | trimSuffix ".go" }}.go'
+force-file-write: true
+formatter: goimports
+formatter-options:
+  goimports:
+    all-errors: false
+    comments: true
+    format-only: true
+    fragment: false
+    local-prefix: ""
+    tab-indent: true
+    tab-width: 8
+generate: true
+include-auto-generated: false
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: '{{.SrcPackageName}}'
+require-template-schema-exists: true
+template: testify
+packages:
+  github.com/indrasaputra/polymer/backend/services/wallet:
+    config:
+      all: true
+      recursive: true
