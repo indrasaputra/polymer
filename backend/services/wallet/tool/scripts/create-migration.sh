@@ -2,6 +2,6 @@
 
 set -eo pipefail
 
-atlas migrate diff --dir file://db/migrations --dev-url docker://postgres/17 --to file://db/schema.sql
-sqlfluff fix -d postgres -e LT05,AM04
-atlas migrate hash --dir file://db/migrations
+atlas migrate diff "$1" --env local
+sqlfluff fix --show-lint-violations -d postgres -e LT05,AM04,AM09,PG01
+atlas migrate hash --env local

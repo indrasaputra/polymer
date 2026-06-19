@@ -7,6 +7,10 @@ format:
 tidy:
 	go mod tidy
 
+.PHONY: lint.sql
+lint.sql:
+	sqlfluff fix --show-lint-violations -d postgres -e LT05,AM04,AM09,PG01
+
 .PHONY: lint.struct
 lint.struct: ## Run fieldalignment.
 	tool/scripts/lint-struct.sh
@@ -22,7 +26,7 @@ lint: lint.cleancache
 
 .PHONY: pretty
 pretty: ## Prettify golang and proto files. Basically, it runs tidy, format, and lint command.
-pretty: tidy gen.db gen.mock format lint lint.struct
+pretty: tidy gen.db gen.mock format lint.sql lint lint.struct
 
 ##@ Test
 .PHONY: test.unit
@@ -33,7 +37,7 @@ test.unit:
 ##@ Migration
 .PHONY: migration
 migration: ## Create database migration using atlas.
-	tool/scripts/create-migration.sh wallet
+	tool/scripts/create-migration.sh $(name)
 
 .PHONY: migrate
 migrate:
