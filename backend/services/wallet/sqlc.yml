@@ -34,13 +34,19 @@ sql:
               import: "github.com/shopspring/decimal"
               type: "Decimal"
               pointer: true
-          - db_type: "pg_catalog.timestamp"
-            go_type:
-              import: "time"
-              type: "Time"
-          - db_type: "pg_catalog.timestamp"
+          - db_type: "timestamp"
+            go_type: "time.Time"
+          - db_type: "timestamp"
             nullable: true
             go_type:
-              import: "time"
               type: "Time"
+              import: "time"
+              pointer: true  
+          - db_type: "timestamptz"
+            go_type: "time.Time"
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              type: "Time"
+              import: "time"
               pointer: true

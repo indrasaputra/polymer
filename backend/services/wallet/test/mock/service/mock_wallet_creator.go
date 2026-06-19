@@ -7,8 +7,9 @@ package service
 import (
 	"context"
 
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	mock "github.com/stretchr/testify/mock"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
 // NewMockCreateWallet creates a new instance of MockCreateWallet. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -39,20 +40,31 @@ func (_m *MockCreateWallet) EXPECT() *MockCreateWallet_Expecter {
 }
 
 // Create provides a mock function for the type MockCreateWallet
-func (_mock *MockCreateWallet) Create(ctx context.Context, input *entity.CreateWalletInput) error {
+func (_mock *MockCreateWallet) Create(ctx context.Context, input *entity.CreateWalletInput) (*entity.Wallet, error) {
 	ret := _mock.Called(ctx, input)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Create")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.CreateWalletInput) error); ok {
+	var r0 *entity.Wallet
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.CreateWalletInput) (*entity.Wallet, error)); ok {
+		return returnFunc(ctx, input)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.CreateWalletInput) *entity.Wallet); ok {
 		r0 = returnFunc(ctx, input)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entity.Wallet)
+		}
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *entity.CreateWalletInput) error); ok {
+		r1 = returnFunc(ctx, input)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // MockCreateWallet_Create_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Create'
@@ -85,12 +97,12 @@ func (_c *MockCreateWallet_Create_Call) Run(run func(ctx context.Context, input 
 	return _c
 }
 
-func (_c *MockCreateWallet_Create_Call) Return(err error) *MockCreateWallet_Create_Call {
-	_c.Call.Return(err)
+func (_c *MockCreateWallet_Create_Call) Return(wallet *entity.Wallet, err error) *MockCreateWallet_Create_Call {
+	_c.Call.Return(wallet, err)
 	return _c
 }
 
-func (_c *MockCreateWallet_Create_Call) RunAndReturn(run func(ctx context.Context, input *entity.CreateWalletInput) error) *MockCreateWallet_Create_Call {
+func (_c *MockCreateWallet_Create_Call) RunAndReturn(run func(ctx context.Context, input *entity.CreateWalletInput) (*entity.Wallet, error)) *MockCreateWallet_Create_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -123,20 +135,31 @@ func (_m *MockCreateWalletRepository) EXPECT() *MockCreateWalletRepository_Expec
 }
 
 // Insert provides a mock function for the type MockCreateWalletRepository
-func (_mock *MockCreateWalletRepository) Insert(ctx context.Context, wallet *entity.Wallet) error {
+func (_mock *MockCreateWalletRepository) Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error) {
 	ret := _mock.Called(ctx, wallet)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Insert")
 	}
 
-	var r0 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.Wallet) error); ok {
+	var r0 *entity.Wallet
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.Wallet) (*entity.Wallet, error)); ok {
+		return returnFunc(ctx, wallet)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.Wallet) *entity.Wallet); ok {
 		r0 = returnFunc(ctx, wallet)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entity.Wallet)
+		}
 	}
-	return r0
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *entity.Wallet) error); ok {
+		r1 = returnFunc(ctx, wallet)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
 }
 
 // MockCreateWalletRepository_Insert_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Insert'
@@ -169,12 +192,12 @@ func (_c *MockCreateWalletRepository_Insert_Call) Run(run func(ctx context.Conte
 	return _c
 }
 
-func (_c *MockCreateWalletRepository_Insert_Call) Return(err error) *MockCreateWalletRepository_Insert_Call {
-	_c.Call.Return(err)
+func (_c *MockCreateWalletRepository_Insert_Call) Return(wallet1 *entity.Wallet, err error) *MockCreateWalletRepository_Insert_Call {
+	_c.Call.Return(wallet1, err)
 	return _c
 }
 
-func (_c *MockCreateWalletRepository_Insert_Call) RunAndReturn(run func(ctx context.Context, wallet *entity.Wallet) error) *MockCreateWalletRepository_Insert_Call {
+func (_c *MockCreateWalletRepository_Insert_Call) RunAndReturn(run func(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)) *MockCreateWalletRepository_Insert_Call {
 	_c.Call.Return(run)
 	return _c
 }

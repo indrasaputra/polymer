@@ -7,6 +7,12 @@ var (
 	ErrEmptyWallet = NewWalletError(http.StatusBadRequest, "wallet is empty or nil")
 	// ErrInvalidUser occurs when user is invalid.
 	ErrInvalidUser = NewWalletError(http.StatusBadRequest, "user is invalid")
+
+	// ErrBadRequest occurs when request is not as expected.
+	ErrBadRequest = NewWalletError(http.StatusBadRequest, "bad request in body or param")
+
+	// ErrInternal occurs for any unknown or when server crashes.
+	ErrInternal = NewWalletError(http.StatusInternalServerError, "internal error")
 )
 
 // WalletError represents wallet-related error.

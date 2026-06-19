@@ -7,19 +7,31 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// ContextKey is just a typed-string.
+type ContextKey string
+
+// ContextKeyCurrentUser should be used as key in context.
+const ContextKeyCurrentUser = "CURRENT_USER"
+
+// CurrentUser represents current user from JWT.
+type CurrentUser struct {
+	Email string
+	ID    uuid.UUID
+}
+
 // CreateWalletInput defines logical data for create wallet.
 type CreateWalletInput struct {
-	Currency string    `json:"currency"`
-	UserID   uuid.UUID `json:"user_id"`
+	Currency string
+	UserID   uuid.UUID
 }
 
 // Wallet defines logical data related to wallet.
 type Wallet struct {
-	Balance  decimal.Decimal `json:"balance"`
-	Currency string          `json:"currency"`
+	Balance  decimal.Decimal
+	Currency string
 	Auditable
-	ID     uuid.UUID `json:"id"`
-	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID
+	UserID uuid.UUID
 }
 
 // Auditable defines logical data related to audit.

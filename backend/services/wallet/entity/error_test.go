@@ -38,3 +38,10 @@ func TestErrInvalidUser(t *testing.T) {
 		assert.Equal(t, "user is invalid", entity.ErrInvalidUser.Error())
 	})
 }
+
+func TestErrInternal(t *testing.T) {
+	t.Run("internal error returns 500 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusInternalServerError, entity.ErrInternal.Code)
+		assert.Equal(t, "internal error", entity.ErrInternal.Error())
+	})
+}

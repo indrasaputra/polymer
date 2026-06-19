@@ -2,7 +2,6 @@ package postgre
 
 import (
 	"context"
-	"fmt"
 
 	pgxdecimal "github.com/jackc/pgx-shopspring-decimal"
 	"github.com/jackc/pgx/v5"
@@ -15,7 +14,6 @@ import (
 
 var (
 	postgresUniqueViolationCode = "23505"
-	postgresConnFormat          = "host=%s port=%d user=%s password=%s dbname=%s sslmode=%s"
 )
 
 var (
@@ -38,25 +36,13 @@ func IsUniqueViolationError(err error) bool {
 
 // Config holds configuration for PostgreSQL.
 type Config struct {
-	Host     string `env:"POSTGRE_HOST,default=localhost"`
-	User     string `env:"POSTGRE_USER,required"`
-	Password string `env:"POSTGRE_PASSWORD,required"`
-	Name     string `env:"POSTGRE_NAME,required"`
-	SSLMode  string `env:"POSTGRE_SSL_MODE,default=disable"`
-	Port     int    `env:"POSTGRE_PORT,default=5432"`
+	URL  string `env:"POSTGRE_URL"`
+	Port int    `env:"POSTGRE_PORT,default=5432"`
 }
 
 // NewPgxPool creates a new pgx pool.
 func NewPgxPool(cfg Config) (*pgxpool.Pool, error) {
-	connStr := fmt.Sprintf(postgresConnFormat,
-		cfg.Host,
-		cfg.Port,
-		cfg.User,
-		cfg.Password,
-		cfg.Name,
-		cfg.SSLMode,
-	)
-	connCfg, err := pgxpool.ParseConfig(connStr)
+	connCfg, err := pgxpool.ParseConfig(cfg.URL)
 	if err != nil {
 		return nil, err
 	}

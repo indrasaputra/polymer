@@ -14,13 +14,13 @@ import (
 // CreateWallet defines interface to create wallet.
 type CreateWallet interface {
 	// Create creates a new wallet.
-	Create(ctx context.Context, input *entity.CreateWalletInput) error
+	Create(ctx context.Context, input *entity.CreateWalletInput) (*entity.Wallet, error)
 }
 
 // CreateWalletRepository defines the interface to insert wallet to repository.
 type CreateWalletRepository interface {
 	// Insert inserts a wallet.
-	Insert(ctx context.Context, wallet *entity.Wallet) error
+	Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)
 }
 
 // WalletCreator is responsible for creating a new wallet.
@@ -36,20 +36,20 @@ func NewWalletCreator(r CreateWalletRepository) *WalletCreator {
 // Create creates a new wallet.
 // It is idempotent. If user already has wallet with the same currency as input,
 // it will not create new wallet.
-func (wc *WalletCreator) Create(ctx context.Context, input *entity.CreateWalletInput) error {
+func (wc *WalletCreator) Create(ctx context.Context, input *entity.CreateWalletInput) (*entity.Wallet, error) {
 	if err := validateCreateWalletInput(input); err != nil {
 		slog.ErrorContext(ctx, "[WalletCreator-Create] wallet is invalid", "error", err)
-		return err
+		return nil, err
 	}
 
 	wallet := convertCreateWalletInputToWallet(input)
 
-	err := wc.walletRepo.Insert(ctx, wallet)
+	result, err := wc.walletRepo.Insert(ctx, wallet)
 	if err != nil {
 		slog.ErrorContext(ctx, "[WalletCreator-Create] fail save to repository", "error", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return result, nil
 }
 
 func validateCreateWalletInput(wallet *entity.CreateWalletInput) error {
