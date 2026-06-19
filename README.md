@@ -22,3 +22,9 @@ My playground to implement everything I find it interesting
 ### Sqlfluff 4.2.2
 
 ### Mockery v3.7.1
+
+### sqlc v1.31.1
+
+### golangci-lint 2.12.2
+
+### fieldalignment 0.46.0

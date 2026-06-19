@@ -25,8 +25,8 @@ type Supabase struct {
 	JwksURL string `env:"SUPABASE_JWKS_URL,required"`
 }
 
-// NewConfig creates an instance of Config.
-func NewConfig(ctx context.Context, lookuper envconfig.Lookuper, env string) *Config {
+// New creates an instance of Config.
+func New(ctx context.Context, lookuper envconfig.Lookuper, env string) *Config {
 	_ = godotenv.Load(env)
 
 	if lookuper == nil {

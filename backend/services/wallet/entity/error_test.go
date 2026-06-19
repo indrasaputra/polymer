@@ -28,20 +28,27 @@ func TestWalletError_Error(t *testing.T) {
 func TestErrEmptyWallet(t *testing.T) {
 	t.Run("empty wallet error returns 401 code", func(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, entity.ErrEmptyWallet.Code)
-		assert.Equal(t, "wallet is empty or nil", entity.ErrEmptyWallet.Error())
+		assert.Equal(t, "Wallet is empty or nil", entity.ErrEmptyWallet.Error())
 	})
 }
 
 func TestErrInvalidUser(t *testing.T) {
 	t.Run("invalid user error returns 401 code", func(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidUser.Code)
-		assert.Equal(t, "user is invalid", entity.ErrInvalidUser.Error())
+		assert.Equal(t, "User is invalid", entity.ErrInvalidUser.Error())
+	})
+}
+
+func TestErrBadRequest(t *testing.T) {
+	t.Run("bad request returns 400 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, entity.ErrBadRequest.Code)
+		assert.Equal(t, "Bad request in body or param", entity.ErrBadRequest.Error())
 	})
 }
 
 func TestErrInternal(t *testing.T) {
 	t.Run("internal error returns 500 code", func(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, entity.ErrInternal.Code)
-		assert.Equal(t, "internal error", entity.ErrInternal.Error())
+		assert.Equal(t, "Internal error", entity.ErrInternal.Error())
 	})
 }

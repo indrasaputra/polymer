@@ -20,7 +20,7 @@ type ErrorResponse struct {
 
 // CreateWalletRequest defines JSON form of create wallet API.
 type CreateWalletRequest struct {
-	Currency string `json:"currency"`
+	Currency string `json:"currency" validate:"required,alpha,len=3,uppercase"`
 }
 
 // SendResponse sends JSON response using Echo framework.

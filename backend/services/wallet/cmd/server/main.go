@@ -14,7 +14,7 @@ import (
 
 func main() {
 	ctx := context.Background()
-	cfg := config.NewConfig(ctx, nil, ".env")
+	cfg := config.New(ctx, nil, ".env")
 
 	pool, err := postgre.NewPgxPool(cfg.Postgre)
 	raiseErrorIfAny(err)
@@ -46,9 +46,7 @@ func main() {
 func registerRouterForAPIV1(srv *server.Server, dep *builder.Dependency) {
 	walletController := builder.BuildWalletController(dep)
 
-	router.RegisterAPIV1(srv.Echo, []router.Controller{
-		walletController,
-	})
+	router.RegisterAPIV1(srv.Echo, walletController)
 }
 
 func raiseErrorIfAny(err error) {

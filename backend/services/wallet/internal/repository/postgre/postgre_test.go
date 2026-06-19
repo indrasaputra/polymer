@@ -89,6 +89,24 @@ func TestWallet_Insert(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
+	t.Run("wallet exists due to DO NOTHING and success when select", func(t *testing.T) {
+		wallet := createTestWallet()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryInsert).
+			WithArgs(wallet.ID, wallet.UserID, wallet.Balance, wallet.Currency, wallet.CreatedAt, wallet.UpdatedAt, wallet.CreatedBy, wallet.UpdatedBy).
+			WillReturnError(sdkpostgre.ErrNotFound)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(wallet.UserID, wallet.Currency).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "balance", "currency", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(wallet.ID, wallet.UserID, wallet.Balance, wallet.Currency, wallet.CreatedAt, wallet.UpdatedAt, wallet.DeletedAt, wallet.CreatedBy, wallet.UpdatedBy, wallet.DeletedBy))
+
+		res, err := st.pgWallet.Insert(testCtx, wallet)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+
 	t.Run("insert returns error", func(t *testing.T) {
 		wallet := createTestWallet()
 		st := createWalletSuite(t)
@@ -118,19 +136,6 @@ func TestWallet_Insert(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 	})
-
-	// t.Run("success insert wallets", func(t *testing.T) {
-	// 	wallet := createTestWallet()
-	// 	st := createWalletSuite(t, ctrl)
-	// 	st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
-	// 	st.db.ExpectExec(query).
-	// 		WithArgs(wallet.ID, wallet.UserID, wallet.Balance, wallet.CreatedAt, wallet.UpdatedAt, wallet.CreatedBy, wallet.UpdatedBy).
-	// 		WillReturnResult(pgxmock.NewResult("INSERT", 1))
-
-	// 	err := st.wallet.Insert(testCtx, wallet)
-
-	// 	assert.NoError(t, err)
-	// })
 }
 
 func createTestWallet() *entity.Wallet {

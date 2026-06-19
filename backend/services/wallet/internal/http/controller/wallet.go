@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"log"
 	"net/http"
+
+	"log"
 
 	"github.com/labstack/echo/v5"
 
@@ -33,19 +34,15 @@ func (w *Wallet) RegisterRoute(g *echo.Group) {
 func (w *Wallet) Create(c *echo.Context, currentUser *entity.CurrentUser) error {
 	var request dto.CreateWalletRequest
 	if err := c.Bind(&request); err != nil {
-		log.Printf("bind err: %v\n", err)
 		return dto.SendResponse(c, nil, entity.ErrEmptyWallet, 0)
 	}
 
 	if err := c.Validate(request); err != nil {
-		log.Printf("validate err: %v\n", err)
+		log.Println(err)
 		return dto.SendResponse(c, nil, entity.ErrEmptyWallet, 0)
 	}
 
-	log.Printf("ddcdcef")
-
 	input := &entity.CreateWalletInput{UserID: currentUser.ID, Currency: request.Currency}
 	result, err := w.creator.Create(c.Request().Context(), input)
-	log.Printf("service err %v\n", err)
 	return dto.SendResponse(c, result, err, http.StatusCreated)
 }

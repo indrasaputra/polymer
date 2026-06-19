@@ -21,46 +21,49 @@ const AlgorithmES256 = "ES256"
 func NewJwtMiddleware(cfg *config.Config) (echo.MiddlewareFunc, error) {
 	kf, err := keyfunc.NewDefault([]string{cfg.Supabase.JwksURL})
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize JWKS: %v", err)
+		return nil, fmt.Errorf("Failed to initialize JWKS: %v", err)
 	}
 
 	jwtConfig := echojwt.Config{
-		KeyFunc: kf.Keyfunc,
-		SuccessHandler: func(c *echo.Context) error {
-			// Extract token parsed by echo-jwt (stored under context key "user" by default)
-			token, ok := c.Get("user").(*jwt.Token)
-			if !ok {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token instance")
-			}
-
-			claims, ok := token.Claims.(jwt.MapClaims)
-			if !ok {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims structure")
-			}
-
-			sub, _ := claims["sub"].(string)
-			email, _ := claims["email"].(string)
-
-			if sub == "" || email == "" {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token payload")
-			}
-
-			id, err := uuid.Parse(sub)
-			if err != nil {
-				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid user ID")
-			}
-
-			currentUser := &entity.CurrentUser{
-				ID:    id,
-				Email: email,
-			}
-			c.Set(entity.ContextKeyCurrentUser, currentUser)
-
-			return nil
-		},
+		KeyFunc:        kf.Keyfunc,
+		SuccessHandler: jwtSuccessHandler,
 	}
 
 	return echojwt.WithConfig(jwtConfig), nil
+}
+
+// jwtSuccessHandler extracts the parsed JWT, validates claims, and attaches CurrentUser to context.
+func jwtSuccessHandler(c *echo.Context) error {
+	// extract token parsed by echo-jwt (stored under context key "user" by default)
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token instance")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token claims structure")
+	}
+
+	sub, _ := claims["sub"].(string)
+	email, _ := claims["email"].(string)
+
+	if sub == "" || email == "" {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid token payload")
+	}
+
+	id, err := uuid.Parse(sub)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid user ID")
+	}
+
+	currentUser := &entity.CurrentUser{
+		ID:    id,
+		Email: email,
+	}
+	c.Set(entity.ContextKeyCurrentUser, currentUser)
+
+	return nil
 }
 
 func getCurrentUser(c *echo.Context) (*entity.CurrentUser, error) {

@@ -1,8 +1,6 @@
 package validator
 
 import (
-	"log"
-
 	goval "github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 )
@@ -22,8 +20,6 @@ func New() *Validator {
 // Validate validates input against rules.
 func (v *Validator) Validate(i any) error {
 	if err := v.validator.Struct(i); err != nil {
-		// Optionally return the error to let each route control the status code.
-		log.Printf("validate %v\n", err)
 		return echo.ErrBadRequest.Wrap(err)
 	}
 	return nil

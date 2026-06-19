@@ -36,8 +36,7 @@ func IsUniqueViolationError(err error) bool {
 
 // Config holds configuration for PostgreSQL.
 type Config struct {
-	URL  string `env:"POSTGRE_URL"`
-	Port int    `env:"POSTGRE_PORT,default=5432"`
+	URL string `env:"POSTGRE_URL"`
 }
 
 // NewPgxPool creates a new pgx pool.

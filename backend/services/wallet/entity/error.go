@@ -4,15 +4,15 @@ import "net/http"
 
 var (
 	// ErrEmptyWallet occurs when wallet is nil or empty.
-	ErrEmptyWallet = NewWalletError(http.StatusBadRequest, "wallet is empty or nil")
+	ErrEmptyWallet = NewWalletError(http.StatusBadRequest, "Wallet is empty or nil")
 	// ErrInvalidUser occurs when user is invalid.
-	ErrInvalidUser = NewWalletError(http.StatusBadRequest, "user is invalid")
+	ErrInvalidUser = NewWalletError(http.StatusBadRequest, "User is invalid")
 
 	// ErrBadRequest occurs when request is not as expected.
-	ErrBadRequest = NewWalletError(http.StatusBadRequest, "bad request in body or param")
+	ErrBadRequest = NewWalletError(http.StatusBadRequest, "Bad request in body or param")
 
 	// ErrInternal occurs for any unknown or when server crashes.
-	ErrInternal = NewWalletError(http.StatusInternalServerError, "internal error")
+	ErrInternal = NewWalletError(http.StatusInternalServerError, "Internal error")
 )
 
 // WalletError represents wallet-related error.
