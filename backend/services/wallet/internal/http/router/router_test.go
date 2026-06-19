@@ -3,11 +3,12 @@ package router_test
 import (
 	"testing"
 
-	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/router"
-	mockrouter "github.com/indrasaputra/polymer/backend/services/wallet/test/mock/http/router"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/router"
+	mockrouter "github.com/indrasaputra/polymer/backend/services/wallet/test/mock/http/router"
 )
 
 func TestRegisterAPIV1(t *testing.T) {

@@ -21,7 +21,7 @@ const AlgorithmES256 = "ES256"
 func NewJwtMiddleware(cfg *config.Config) (echo.MiddlewareFunc, error) {
 	kf, err := keyfunc.NewDefault([]string{cfg.Supabase.JwksURL})
 	if err != nil {
-		return nil, fmt.Errorf("Failed to initialize JWKS: %v", err)
+		return nil, fmt.Errorf("failed to initialize JWKS: %v", err)
 	}
 
 	jwtConfig := echojwt.Config{

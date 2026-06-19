@@ -76,8 +76,9 @@ func convertCreateWalletInputToWallet(input *entity.CreateWalletInput) *entity.W
 }
 
 func setWalletAuditableProperties(wallet *entity.Wallet) {
-	wallet.CreatedAt = time.Now().UTC()
-	wallet.UpdatedAt = time.Now().UTC()
+	now := time.Now().UTC()
+	wallet.CreatedAt = now
+	wallet.UpdatedAt = now
 	wallet.CreatedBy = wallet.UserID
 	wallet.UpdatedBy = wallet.UserID
 }

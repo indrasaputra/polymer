@@ -67,6 +67,7 @@ func TestTxDB_Exec(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
+		assert.NoError(t, st.db.ExpectationsWereMet())
 	})
 }
 
@@ -85,6 +86,7 @@ func TestTxDB_Query(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
+		assert.NoError(t, st.db.ExpectationsWereMet())
 	})
 }
 
@@ -102,6 +104,7 @@ func TestTxDB_QueryRow(t *testing.T) {
 		res := st.tx.QueryRow(testCtx, "query", "arg1", "arg2")
 
 		assert.NotNil(t, res)
+		assert.NoError(t, st.db.ExpectationsWereMet())
 	})
 }
 

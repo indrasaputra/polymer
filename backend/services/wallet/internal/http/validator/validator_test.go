@@ -4,9 +4,16 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/validator"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/validator"
+)
+
+var (
+	testName  = "Test User"
+	testEmail = "test.user@mail.com"
+	testAge   = 30
 )
 
 type testStruct struct {
@@ -21,15 +28,14 @@ func TestNew(t *testing.T) {
 
 		assert.NotNil(t, v)
 	})
-
 }
 
 func TestValidator_Validate(t *testing.T) {
 	t.Run("should return error when required field is missing", func(t *testing.T) {
 		v := validator.New()
 		input := testStruct{
-			Email: "test.user@mail.com",
-			Age:   30,
+			Email: testEmail,
+			Age:   testAge,
 		}
 
 		err := v.Validate(input)
@@ -40,9 +46,9 @@ func TestValidator_Validate(t *testing.T) {
 	t.Run("should return echo bad request error when validation fails", func(t *testing.T) {
 		v := validator.New()
 		input := testStruct{
-			Name:  "Test User",
+			Name:  testName,
 			Email: "not-an-email",
-			Age:   30,
+			Age:   testAge,
 		}
 
 		err := v.Validate(input)
@@ -56,8 +62,8 @@ func TestValidator_Validate(t *testing.T) {
 	t.Run("should return error when age is out of range", func(t *testing.T) {
 		v := validator.New()
 		input := testStruct{
-			Name:  "Test User",
-			Email: "test.user@mail.com",
+			Name:  testName,
+			Email: testEmail,
 			Age:   200,
 		}
 
@@ -89,9 +95,9 @@ func TestValidator_Validate(t *testing.T) {
 	t.Run("should return nil when struct is valid", func(t *testing.T) {
 		v := validator.New()
 		input := testStruct{
-			Name:  "Test User",
-			Email: "test.user@mail.com",
-			Age:   30,
+			Name:  testName,
+			Email: testEmail,
+			Age:   testAge,
 		}
 
 		err := v.Validate(input)

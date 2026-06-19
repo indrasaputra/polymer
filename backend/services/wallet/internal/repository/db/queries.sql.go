@@ -13,19 +13,19 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const getWalletByUserIdAndCurrency = `-- name: GetWalletByUserIdAndCurrency :one
+const getUserActiveWalletByUserIdAndCurrency = `-- name: GetUserActiveWalletByUserIdAndCurrency :one
 SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
-WHERE user_id = $1 AND currency = $2
+WHERE user_id = $1 AND currency = $2 AND deleted_at IS NULL
 LIMIT 1
 `
 
-type GetWalletByUserIdAndCurrencyParams struct {
+type GetUserActiveWalletByUserIdAndCurrencyParams struct {
 	UserID   uuid.UUID
 	Currency string
 }
 
-func (q *Queries) GetWalletByUserIdAndCurrency(ctx context.Context, arg GetWalletByUserIdAndCurrencyParams) (*Wallet, error) {
-	row := q.db.QueryRow(ctx, getWalletByUserIdAndCurrency, arg.UserID, arg.Currency)
+func (q *Queries) GetUserActiveWalletByUserIdAndCurrency(ctx context.Context, arg GetUserActiveWalletByUserIdAndCurrencyParams) (*Wallet, error) {
+	row := q.db.QueryRow(ctx, getUserActiveWalletByUserIdAndCurrency, arg.UserID, arg.Currency)
 	var i Wallet
 	err := row.Scan(
 		&i.ID,

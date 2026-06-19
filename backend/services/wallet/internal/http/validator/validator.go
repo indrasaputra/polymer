@@ -10,7 +10,7 @@ type Validator struct {
 	validator *goval.Validate
 }
 
-// New creates an instace of validator.
+// New creates an instance of validator.
 func New() *Validator {
 	return &Validator{
 		validator: goval.New(goval.WithRequiredStructEnabled()),

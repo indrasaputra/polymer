@@ -4,6 +4,7 @@ package middleware
 // changing private func to public func makes test too complex.
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,7 +19,11 @@ import (
 )
 
 var (
-	testUserID = uuid.Must(uuid.NewV7())
+	testCtx         = context.Background()
+	testUserID      = uuid.Must(uuid.NewV7())
+	testEmail       = "test.user@mail.com"
+	testJwtSubKey   = "sub"
+	testJwtEmailKey = "email"
 )
 
 func TestNewJwtMiddleware(t *testing.T) {
@@ -96,7 +101,7 @@ func TestJwtSuccessHandler(t *testing.T) {
 		c := createTestContext(e)
 		token := &jwt.Token{
 			Claims: jwt.MapClaims{
-				"email": "test.user@mail.com",
+				testJwtEmailKey: testEmail,
 			},
 		}
 		c.Set("user", token)
@@ -114,7 +119,7 @@ func TestJwtSuccessHandler(t *testing.T) {
 		userID := testUserID
 		token := &jwt.Token{
 			Claims: jwt.MapClaims{
-				"sub": userID.String(),
+				testJwtSubKey: userID.String(),
 			},
 		}
 		c.Set("user", token)
@@ -131,8 +136,8 @@ func TestJwtSuccessHandler(t *testing.T) {
 		c := createTestContext(e)
 		token := &jwt.Token{
 			Claims: jwt.MapClaims{
-				"sub":   "not-a-uuid",
-				"email": "test.user@mail.com",
+				testJwtSubKey:   "not-a-uuid",
+				testJwtEmailKey: testEmail,
 			},
 		}
 		c.Set("user", token)
@@ -149,8 +154,8 @@ func TestJwtSuccessHandler(t *testing.T) {
 		c := createTestContext(e)
 		token := &jwt.Token{
 			Claims: jwt.MapClaims{
-				"sub":   testUserID.String(),
-				"email": "test.user@mail.com",
+				testJwtSubKey:   testUserID.String(),
+				testJwtEmailKey: testEmail,
 			},
 		}
 		c.Set("user", token)
@@ -161,7 +166,7 @@ func TestJwtSuccessHandler(t *testing.T) {
 		currentUser, ok := c.Get(entity.ContextKeyCurrentUser).(*entity.CurrentUser)
 		assert.True(t, ok)
 		assert.Equal(t, testUserID, currentUser.ID)
-		assert.Equal(t, "test.user@mail.com", currentUser.Email)
+		assert.Equal(t, testEmail, currentUser.Email)
 	})
 }
 
@@ -205,7 +210,7 @@ func TestGetCurrentUser(t *testing.T) {
 		c := createTestContext(e)
 		expected := &entity.CurrentUser{
 			ID:    testUserID,
-			Email: "test.user@mail.com",
+			Email: testEmail,
 		}
 		c.Set(entity.ContextKeyCurrentUser, expected)
 
@@ -214,7 +219,6 @@ func TestGetCurrentUser(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, expected, user)
 	})
-
 }
 
 func TestRequireUser(t *testing.T) {
@@ -224,7 +228,7 @@ func TestRequireUser(t *testing.T) {
 		c := createTestContext(e)
 
 		called := false
-		handler := RequireUser(func(c *echo.Context, user *entity.CurrentUser) error {
+		handler := RequireUser(func(_ *echo.Context, _ *entity.CurrentUser) error {
 			called = true
 			return nil
 		})
@@ -239,13 +243,13 @@ func TestRequireUser(t *testing.T) {
 		c := createTestContext(e)
 		expected := &entity.CurrentUser{
 			ID:    testUserID,
-			Email: "test.user@mail.com",
+			Email: testEmail,
 		}
 		c.Set(entity.ContextKeyCurrentUser, expected)
 
 		called := false
 		var receivedUser *entity.CurrentUser
-		handler := RequireUser(func(c *echo.Context, user *entity.CurrentUser) error {
+		handler := RequireUser(func(_ *echo.Context, user *entity.CurrentUser) error {
 			called = true
 			receivedUser = user
 			return nil
@@ -260,7 +264,7 @@ func TestRequireUser(t *testing.T) {
 }
 
 func createTestContext(e *echo.Echo) *echo.Context {
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequestWithContext(testCtx, http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	return e.NewContext(req, rec)
 }

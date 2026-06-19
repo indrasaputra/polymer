@@ -102,14 +102,16 @@ func createCreateWalletInput() *entity.CreateWalletInput {
 }
 
 func createWallet() *entity.Wallet {
+	now := time.Now().UTC()
+
 	return &entity.Wallet{
 		ID:       uuid.Must(uuid.NewV7()),
 		UserID:   testUserID,
 		Currency: testCurrency,
 		Balance:  decimal.Zero,
 		Auditable: entity.Auditable{
-			CreatedAt: time.Now().UTC(),
-			UpdatedAt: time.Now().UTC(),
+			CreatedAt: now,
+			UpdatedAt: now,
 			CreatedBy: testUserID,
 			UpdatedBy: testUserID,
 		},

@@ -6,15 +6,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
-	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/controller"
-	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/validator"
-	mockservice "github.com/indrasaputra/polymer/backend/services/wallet/test/mock/service"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/echotest"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/controller"
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/validator"
+	mockservice "github.com/indrasaputra/polymer/backend/services/wallet/test/mock/service"
 )
 
 var (
@@ -45,7 +46,7 @@ type WalletSuite struct {
 }
 
 func TestNewWallet(t *testing.T) {
-	t.Run("success create an instace of Wallet", func(t *testing.T) {
+	t.Run("success create an instance of Wallet", func(t *testing.T) {
 		st := createWalletSuite(t)
 
 		assert.NotNil(t, st)

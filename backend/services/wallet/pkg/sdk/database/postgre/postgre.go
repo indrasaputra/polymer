@@ -2,6 +2,7 @@ package postgre
 
 import (
 	"context"
+	"errors"
 
 	pgxdecimal "github.com/jackc/pgx-shopspring-decimal"
 	"github.com/jackc/pgx/v5"
@@ -28,10 +29,8 @@ func IsUniqueViolationError(err error) bool {
 	if err == nil {
 		return false
 	}
-	if pgErr, ok := err.(*pgconn.PgError); ok {
-		return pgErr.Code == postgresUniqueViolationCode
-	}
-	return false
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == postgresUniqueViolationCode
 }
 
 // Config holds configuration for PostgreSQL.

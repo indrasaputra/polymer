@@ -3,11 +3,12 @@ package builder_test
 import (
 	"testing"
 
+	"github.com/pashagolub/pgxmock/v5"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/builder"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	mockuow "github.com/indrasaputra/polymer/backend/services/wallet/test/mock/pkg/sdk/uow"
-	"github.com/pashagolub/pgxmock/v5"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildWalletController(t *testing.T) {

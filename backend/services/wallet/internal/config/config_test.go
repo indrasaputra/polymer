@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/sethvargo/go-envconfig"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 )
 
 var (

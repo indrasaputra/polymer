@@ -2,7 +2,6 @@ package postgre
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -42,7 +41,7 @@ func (w *Wallet) Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wal
 	res, err := w.queries.InsertWallet(ctx, param)
 
 	if err == sdkpostgre.ErrNotFound {
-		res, err = w.getWalletByUserIDAndCurrency(ctx, wallet.UserID, wallet.Currency)
+		res, err = w.getUserActiveWalletByUserIDAndCurrency(ctx, wallet.UserID, wallet.Currency)
 		if err != nil {
 			return nil, err
 		}
@@ -54,14 +53,13 @@ func (w *Wallet) Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wal
 	return convertDBWalletToEntityWallet(res), nil
 }
 
-func (w *Wallet) getWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*db.Wallet, error) {
-	res, err := w.queries.GetWalletByUserIdAndCurrency(ctx, db.GetWalletByUserIdAndCurrencyParams{
+func (w *Wallet) getUserActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*db.Wallet, error) {
+	res, err := w.queries.GetUserActiveWalletByUserIdAndCurrency(ctx, db.GetUserActiveWalletByUserIdAndCurrencyParams{
 		UserID:   userID,
 		Currency: currency,
 	})
 
 	if err == sdkpostgre.ErrNotFound {
-		fmt.Println("here")
 		return nil, entity.ErrEmptyWallet
 	}
 	if err != nil {

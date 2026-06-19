@@ -40,7 +40,7 @@ func TestWallet_Insert(t *testing.T) {
 				ON CONFLICT \(user_id, currency\) WHERE deleted_at IS NULL DO NOTHING
 				RETURNING id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by`
 	querySelect := `SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
-					WHERE user_id = \$1 AND currency = \$2
+					WHERE user_id = \$1 AND currency = \$2 AND deleted_at IS NULL
 					LIMIT 1`
 
 	t.Run("nil wallets is prohibited", func(t *testing.T) {
@@ -159,6 +159,10 @@ func createWalletSuite(t *testing.T) *WalletSuite {
 	if err != nil {
 		t.Fatalf("error opening a stub database connection: %v\n", err)
 	}
+	t.Cleanup(func() {
+		assert.NoError(t, pool.ExpectationsWereMet())
+		pool.Close()
+	})
 	g := mockuow.NewMockTxGetter(t)
 	tx := sdkpostgre.NewTxDB(pool, g)
 	q := db.New(tx)

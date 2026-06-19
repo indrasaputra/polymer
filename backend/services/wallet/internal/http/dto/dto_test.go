@@ -1,19 +1,25 @@
 package dto_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
-	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/dto"
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/dto"
+)
+
+var (
+	testCtx = context.Background()
 )
 
 func TestSendResponse(t *testing.T) {
 	t.Run("wallet error entity returns code as defined", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req := httptest.NewRequestWithContext(testCtx, http.MethodGet, "/", nil)
 		rec := httptest.NewRecorder()
 		e := echo.New()
 		c := e.NewContext(req, rec)
@@ -25,7 +31,7 @@ func TestSendResponse(t *testing.T) {
 	})
 
 	t.Run("non wallet error returns internal server error", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req := httptest.NewRequestWithContext(testCtx, http.MethodGet, "/", nil)
 		rec := httptest.NewRecorder()
 		e := echo.New()
 		c := e.NewContext(req, rec)
@@ -37,7 +43,7 @@ func TestSendResponse(t *testing.T) {
 	})
 
 	t.Run("success returns http status ok by default", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req := httptest.NewRequestWithContext(testCtx, http.MethodGet, "/", nil)
 		rec := httptest.NewRecorder()
 		e := echo.New()
 		c := e.NewContext(req, rec)
@@ -49,7 +55,7 @@ func TestSendResponse(t *testing.T) {
 	})
 
 	t.Run("success returns custom code if provided", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req := httptest.NewRequestWithContext(testCtx, http.MethodGet, "/", nil)
 		rec := httptest.NewRecorder()
 		e := echo.New()
 		c := e.NewContext(req, rec)
