@@ -3,18 +3,23 @@ package main
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/builder"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/router"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/server"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/database/postgre"
+	sdklog "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/log"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/uow"
 )
 
 func main() {
 	ctx := context.Background()
 	cfg := config.New(ctx, nil, ".env")
+
+	logger := sdklog.NewSlogLogger(cfg.ServiceName)
+	slog.SetDefault(logger)
 
 	pool, err := postgre.NewPgxPool(cfg.Postgre)
 	raiseErrorIfAny(err)
