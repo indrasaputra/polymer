@@ -22,7 +22,7 @@ func main() {
 	logger := sdklog.NewSlogLogger(cfg.ServiceName)
 	slog.SetDefault(logger)
 
-	_, err := trace.NewHTTPProvider(ctx, cfg.Tracer)
+	traceProvider, err := trace.NewHTTPProvider(ctx, cfg.Tracer)
 	raiseErrorIfAny(err)
 
 	pool, err := postgre.NewPgxPool(cfg.Postgre)
@@ -40,7 +40,7 @@ func main() {
 		Queries:   queries,
 	}
 
-	srv, err := server.New(cfg, logger)
+	srv, err := server.New(cfg, logger, traceProvider)
 	raiseErrorIfAny(err)
 
 	registerRouterForAPIV1(srv, dep)

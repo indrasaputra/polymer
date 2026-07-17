@@ -5,7 +5,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
@@ -24,7 +24,7 @@ const (
 
 // Config holds configuration for tracing.
 type Config struct {
-	OtelCollectorAddress string `env:"OPENTELEMETRY_COLLECTOR_ADDRESS,default=localhost:4318"`
+	OtelCollectorAddress string `env:"OPENTELEMETRY_COLLECTOR_ADDRESS,default=localhost:4317"`
 	AppEnv               string `env:"APP_ENV,default=development"`
 	ServiceName          string `env:"SERVICE_NAME,default=wallet"`
 }
@@ -42,9 +42,9 @@ func NewHTTPProvider(ctx context.Context, cfg Config) (*Provider, error) {
 		sampler = sdktrace.ParentBased(sdktrace.TraceIDRatioBased(samplerRatio))
 	}
 
-	client := otlptracehttp.NewClient(
-		otlptracehttp.WithInsecure(),
-		otlptracehttp.WithEndpoint(cfg.OtelCollectorAddress),
+	client := otlptracegrpc.NewClient(
+		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithEndpoint(cfg.OtelCollectorAddress),
 	)
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
