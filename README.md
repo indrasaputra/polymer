@@ -28,3 +28,29 @@ My playground to implement everything I find it interesting
 ### golangci-lint 2.12.2
 
 ### fieldalignment 0.46.0
+
+---
+
+## How to Run
+
+### Supabase
+
+- Go to `/supabase` directory
+- Run `supabase start`
+- Useful command
+    ```
+    supabase db reset
+    supabase stop
+    ```
+
+### Account
+
+- Go to `/backend/services/account` directory
+- Run `pnpm run db:migrate`
+- Run `pnpm run start`
+
+### Wallet
+
+- Go to `/backend/services/wallet` directory
+- Run `make migrate`
+- Run `go run cmd/server/main.go`

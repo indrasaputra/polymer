@@ -9,12 +9,15 @@ import (
 	"syscall"
 	"time"
 
+	echootel "github.com/labstack/echo-opentelemetry"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/validator"
 	wmid "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/http/middleware"
+	sdkmetric "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/metric"
+	sdktrace "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
 )
 
 // Server holds server data.
@@ -24,7 +27,7 @@ type Server struct {
 }
 
 // New creates an instance of Server with all necessary middleware ready.
-func New(cfg *config.Config) (*Server, error) {
+func New(cfg *config.Config, logger *slog.Logger, traceProvider *sdktrace.Provider, metricProvider *sdkmetric.Provider) (*Server, error) {
 	e := echo.New()
 
 	e.Validator = validator.New()
@@ -33,9 +36,12 @@ func New(cfg *config.Config) (*Server, error) {
 	e.Use(middleware.Secure())
 	e.Use(middleware.ContextTimeout(time.Duration(cfg.GlobalTimeoutInSeconds) * time.Second))
 	e.Use(middleware.RequestID())
+	e.Use(echootel.NewMiddlewareWithConfig(echootel.Config{
+		ServerName:     cfg.ServiceName,
+		TracerProvider: traceProvider,
+		MeterProvider:  metricProvider,
+	}))
 
-	// TODO: move to sdk logger and middleware
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogStatus:    true,
 		LogLatency:   true,
@@ -45,19 +51,30 @@ func New(cfg *config.Config) (*Server, error) {
 		LogURI:       true,
 		LogRoutePath: true,
 		HandleError:  true, // forwards the error to the global error handler so it can pick the status code
-		LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
-			if v.Error == nil {
-				logger.LogAttrs(context.Background(), slog.LevelInfo, "REQUEST",
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-				)
-			} else {
-				logger.LogAttrs(context.Background(), slog.LevelError, "REQUEST_ERROR",
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-					slog.String("err", v.Error.Error()),
-				)
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			level := slog.LevelInfo
+
+			attrs := []slog.Attr{
+				slog.String("remote_ip", v.RemoteIP),
+				slog.String("host", v.Host),
+				slog.String("method", v.Method),
+				slog.String("uri", v.URI),
+				slog.String("user_agent", v.UserAgent),
+				slog.Int("status", v.Status),
+				slog.Duration("latency", v.Latency),
+				slog.Int64("latency_ms", v.Latency.Milliseconds()),
+				slog.String("route", v.RoutePath),
+				slog.String("route_path", v.RoutePath),
+				slog.String("request_id", v.RequestID),
 			}
+
+			if v.Error != nil {
+				level = slog.LevelError
+				attrs = append(attrs, slog.String("error", v.Error.Error()))
+			}
+
+			logger.LogAttrs(c.Request().Context(), level, "http_request", attrs...)
+
 			return nil
 		},
 	}))
@@ -67,8 +84,6 @@ func New(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 	e.Use(jwtmid)
-
-	// TODO: open telemetry middleware
 
 	return &Server{Echo: e, Port: cfg.Port}, nil
 }
