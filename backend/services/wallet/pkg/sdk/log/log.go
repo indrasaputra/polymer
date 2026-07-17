@@ -68,14 +68,16 @@ func (s *SlogJSONHandler) printStackTrace(r *slog.Record) {
 // WithAttrs overrides the WithAttrs method from slog.JSONHandler.
 func (s *SlogJSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	return &SlogJSONHandler{
-		JSONHandler: s.JSONHandler.WithAttrs(attrs).(*slog.JSONHandler),
+		JSONHandler:      s.JSONHandler.WithAttrs(attrs).(*slog.JSONHandler),
+		stackTraceConfig: s.stackTraceConfig,
 	}
 }
 
 // WithGroup overrides the WithGroup method from slog.JSONHandler.
 func (s *SlogJSONHandler) WithGroup(name string) slog.Handler {
 	return &SlogJSONHandler{
-		JSONHandler: s.JSONHandler.WithGroup(name).(*slog.JSONHandler),
+		JSONHandler:      s.JSONHandler.WithGroup(name).(*slog.JSONHandler),
+		stackTraceConfig: s.stackTraceConfig,
 	}
 }
 

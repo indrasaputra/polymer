@@ -52,21 +52,28 @@ func New(cfg *config.Config, logger *slog.Logger, traceProvider *sdktrace.Provid
 		LogRoutePath: true,
 		HandleError:  true, // forwards the error to the global error handler so it can pick the status code
 		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
-			var err string
-			if v.Error != nil {
-				err = v.Error.Error()
-			}
+			level := slog.LevelInfo
 
-			logger.LogAttrs(c.Request().Context(), slog.LevelInfo, "REQUEST",
-				slog.String("uri", v.URI),
-				slog.Int("status", v.Status),
-				slog.String("error", err),
-				slog.Duration("latency", v.Latency),
-				slog.Duration("latency_ms", v.Latency/time.Millisecond),
+			attrs := []slog.Attr{
 				slog.String("remote_ip", v.RemoteIP),
+				slog.String("host", v.Host),
+				slog.String("method", v.Method),
+				slog.String("uri", v.URI),
+				slog.String("user_agent", v.UserAgent),
+				slog.Int("status", v.Status),
+				slog.Duration("latency", v.Latency),
+				slog.Int64("latency_ms", v.Latency.Milliseconds()),
+				slog.String("route", v.RoutePath),
 				slog.String("route_path", v.RoutePath),
 				slog.String("request_id", v.RequestID),
-			)
+			}
+
+			if v.Error != nil {
+				level = slog.LevelError
+				attrs = append(attrs, slog.String("error", v.Error.Error()))
+			}
+
+			logger.LogAttrs(c.Request().Context(), level, "http_request", attrs...)
 
 			return nil
 		},

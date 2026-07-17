@@ -50,7 +50,11 @@ func main() {
 	registerRouterForAPIV1(srv, dep)
 
 	ctx, stop := srv.PrepareForGracefulStop()
-	defer stop()
+	defer func() {
+		_ = traceProvider.Shutdown(ctx)
+		_ = metricProvider.Shutdown(ctx)
+		stop()
+	}()
 
 	err = srv.StartWithGracefulStop(ctx, cfg)
 	raiseErrorIfAny(err)

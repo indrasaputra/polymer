@@ -31,7 +31,7 @@ type Config struct {
 
 // Provider provides tracing functionality.
 type Provider struct {
-	otrace.TracerProvider
+	*sdktrace.TracerProvider
 }
 
 // NewProvider creates an instance of Provider.
