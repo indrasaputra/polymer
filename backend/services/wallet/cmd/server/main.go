@@ -40,7 +40,7 @@ func main() {
 		Queries:   queries,
 	}
 
-	srv, err := server.New(cfg)
+	srv, err := server.New(cfg, logger)
 	raiseErrorIfAny(err)
 
 	registerRouterForAPIV1(srv, dep)

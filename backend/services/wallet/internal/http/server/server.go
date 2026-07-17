@@ -24,7 +24,7 @@ type Server struct {
 }
 
 // New creates an instance of Server with all necessary middleware ready.
-func New(cfg *config.Config) (*Server, error) {
+func New(cfg *config.Config, logger *slog.Logger) (*Server, error) {
 	e := echo.New()
 
 	e.Validator = validator.New()
@@ -34,8 +34,6 @@ func New(cfg *config.Config) (*Server, error) {
 	e.Use(middleware.ContextTimeout(time.Duration(cfg.GlobalTimeoutInSeconds) * time.Second))
 	e.Use(middleware.RequestID())
 
-	// TODO: move to sdk logger and middleware
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogStatus:    true,
 		LogLatency:   true,
@@ -46,18 +44,22 @@ func New(cfg *config.Config) (*Server, error) {
 		LogRoutePath: true,
 		HandleError:  true, // forwards the error to the global error handler so it can pick the status code
 		LogValuesFunc: func(_ *echo.Context, v middleware.RequestLoggerValues) error {
-			if v.Error == nil {
-				logger.LogAttrs(context.Background(), slog.LevelInfo, "REQUEST",
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-				)
-			} else {
-				logger.LogAttrs(context.Background(), slog.LevelError, "REQUEST_ERROR",
-					slog.String("uri", v.URI),
-					slog.Int("status", v.Status),
-					slog.String("err", v.Error.Error()),
-				)
+			var err string
+			if v.Error != nil {
+				err = v.Error.Error()
 			}
+
+			logger.LogAttrs(context.Background(), slog.LevelInfo, "REQUEST",
+				slog.String("uri", v.URI),
+				slog.Int("status", v.Status),
+				slog.String("error", err),
+				slog.Duration("latency", v.Latency),
+				slog.Duration("latency_ms", v.Latency/time.Millisecond),
+				slog.String("remote_ip", v.RemoteIP),
+				slog.String("route_path", v.RoutePath),
+				slog.String("request_id", v.RequestID),
+			)
+
 			return nil
 		},
 	}))

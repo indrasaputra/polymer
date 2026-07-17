@@ -64,3 +64,8 @@ gen.mock: ## Generate mocks.
 .PHONY: gen.db
 gen.db: ## Generate DB implementation using sqlc.
 	sqlc generate
+
+##@ API
+.PHONY: start
+start: ## Start API server
+	go run cmd/server/main.go
