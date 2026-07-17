@@ -24,9 +24,9 @@ const (
 
 // Config holds configuration for tracing.
 type Config struct {
-	OtelCollectorAddress string `env:"OPENTELEMETRY_COLLECTOR_ADDRESS,default=localhost:4317"`
+	OtelCollectorAddress string `env:"OPENTELEMETRY_COLLECTOR_ADDRESS,default=localhost:4318"`
 	AppEnv               string `env:"APP_ENV,default=development"`
-	ServiceName          string `env:"SERVICE_NAME,required"`
+	ServiceName          string `env:"SERVICE_NAME,default=wallet"`
 }
 
 // Provider provides tracing functionality.

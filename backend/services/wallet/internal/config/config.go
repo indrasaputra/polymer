@@ -7,10 +7,12 @@ import (
 	"github.com/sethvargo/go-envconfig"
 
 	sdkpostgre "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/database/postgre"
+	sdktrace "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
 )
 
 // Config holds configuration for the project.
 type Config struct {
+	Tracer                   sdktrace.Config
 	ServiceName              string `env:"SERVICE_NAME,default=wallet"`
 	Env                      string `env:"ENV,default=development"`
 	Port                     string `env:"PORT,default=9002"`

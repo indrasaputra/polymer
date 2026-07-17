@@ -11,6 +11,7 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/server"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/database/postgre"
 	sdklog "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/log"
+	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/uow"
 )
 
@@ -20,6 +21,9 @@ func main() {
 
 	logger := sdklog.NewSlogLogger(cfg.ServiceName)
 	slog.SetDefault(logger)
+
+	_, err := trace.NewHTTPProvider(ctx, cfg.Tracer)
+	raiseErrorIfAny(err)
 
 	pool, err := postgre.NewPgxPool(cfg.Postgre)
 	raiseErrorIfAny(err)
