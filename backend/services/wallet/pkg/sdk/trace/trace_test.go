@@ -27,7 +27,7 @@ func TestNewProvider(t *testing.T) {
 			AppEnv:               "production",
 		}
 
-		prov, err := trace.NewHTTPProvider(ctx, cfg)
+		prov, err := trace.NewProvider(ctx, cfg)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, prov)

@@ -11,6 +11,7 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/server"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/database/postgre"
 	sdklog "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/log"
+	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/metric"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/uow"
 )
@@ -22,7 +23,10 @@ func main() {
 	logger := sdklog.NewSlogLogger(cfg.ServiceName)
 	slog.SetDefault(logger)
 
-	traceProvider, err := trace.NewHTTPProvider(ctx, cfg.Tracer)
+	traceProvider, err := trace.NewProvider(ctx, cfg.Tracer)
+	raiseErrorIfAny(err)
+
+	metricProvider, err := metric.NewProvider(ctx, cfg.Metric)
 	raiseErrorIfAny(err)
 
 	pool, err := postgre.NewPgxPool(cfg.Postgre)
@@ -40,7 +44,7 @@ func main() {
 		Queries:   queries,
 	}
 
-	srv, err := server.New(cfg, logger, traceProvider)
+	srv, err := server.New(cfg, logger, traceProvider, metricProvider)
 	raiseErrorIfAny(err)
 
 	registerRouterForAPIV1(srv, dep)

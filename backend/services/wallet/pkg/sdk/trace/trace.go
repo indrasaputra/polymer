@@ -34,9 +34,8 @@ type Provider struct {
 	otrace.TracerProvider
 }
 
-// NewHTTPProvider creates an instance of Provider.
-// func NewHTTPProvider(cfg Config, exporter sdktrace.SpanExporter) *Provider {
-func NewHTTPProvider(ctx context.Context, cfg Config) (*Provider, error) {
+// NewProvider creates an instance of Provider.
+func NewProvider(ctx context.Context, cfg Config) (*Provider, error) {
 	sampler := sdktrace.AlwaysSample()
 	if cfg.AppEnv == EnvProduction {
 		sampler = sdktrace.ParentBased(sdktrace.TraceIDRatioBased(samplerRatio))

@@ -16,7 +16,8 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/validator"
 	wmid "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/http/middleware"
-	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
+	sdkmetric "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/metric"
+	sdktrace "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
 )
 
 // Server holds server data.
@@ -26,7 +27,7 @@ type Server struct {
 }
 
 // New creates an instance of Server with all necessary middleware ready.
-func New(cfg *config.Config, logger *slog.Logger, traceProvider *trace.Provider) (*Server, error) {
+func New(cfg *config.Config, logger *slog.Logger, traceProvider *sdktrace.Provider, metricProvider *sdkmetric.Provider) (*Server, error) {
 	e := echo.New()
 
 	e.Validator = validator.New()
@@ -36,7 +37,9 @@ func New(cfg *config.Config, logger *slog.Logger, traceProvider *trace.Provider)
 	e.Use(middleware.ContextTimeout(time.Duration(cfg.GlobalTimeoutInSeconds) * time.Second))
 	e.Use(middleware.RequestID())
 	e.Use(echootel.NewMiddlewareWithConfig(echootel.Config{
-		TracerProvider: traceProvider.TracerProvider,
+		ServerName:     cfg.ServiceName,
+		TracerProvider: traceProvider,
+		MeterProvider:  metricProvider,
 	}))
 
 	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
