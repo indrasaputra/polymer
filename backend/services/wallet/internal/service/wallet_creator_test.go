@@ -55,6 +55,17 @@ func TestWalletCreator_Create(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
+	t.Run("currency is invalid", func(t *testing.T) {
+		st := createWalletCreatorSuite(t)
+		input := createCreateWalletInput()
+		input.Currency = "XXX"
+
+		res, err := st.walletService.Create(testCtx, input)
+
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
 	t.Run("wallet repo insert returns error", func(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()

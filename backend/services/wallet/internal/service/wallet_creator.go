@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/bojanz/currency"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
@@ -59,7 +60,9 @@ func validateCreateWalletInput(wallet *entity.CreateWalletInput) error {
 	if wallet.UserID == uuid.Nil {
 		return entity.ErrInvalidUser
 	}
-	// TODO: validate currency against collection
+	if !currency.IsValid(wallet.Currency) {
+		return entity.ErrInvalidCurrency
+	}
 
 	return nil
 }
