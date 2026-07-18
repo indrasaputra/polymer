@@ -12,18 +12,25 @@ import (
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/service"
+	"github.com/indrasaputra/polymer/backend/services/wallet/test/mock/pkg/sdk/uow"
 	mockservice "github.com/indrasaputra/polymer/backend/services/wallet/test/mock/service"
 )
 
+type ctxKey string
+
 var (
-	testCtx      = context.Background()
-	testUserID   = uuid.Must(uuid.NewV7())
-	testCurrency = "USD"
+	testCtx        = context.Background()
+	testCtxTx      = context.WithValue(testCtx, ctxKey("tx"), true)
+	testUserID     = uuid.Must(uuid.NewV7())
+	testCurrency   = "USD"
+	testCustomerID = "cus_NffrFeUfNV2Hib"
 )
 
 type WalletCreatorSuite struct {
-	walletService *service.WalletCreator
-	walletRepo    *mockservice.MockCreateWalletRepository
+	walletService  *service.WalletCreator
+	txManager      *uow.MockTxManager
+	walletRepo     *mockservice.MockCreateWalletRepository
+	customerClient *mockservice.MockCreateCustomerClient
 }
 
 func TestNewWalletCreator(t *testing.T) {
@@ -66,12 +73,10 @@ func TestWalletCreator_Create(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
-	t.Run("wallet repo insert returns error", func(t *testing.T) {
+	t.Run("get customer returns error", func(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
-		st.walletRepo.EXPECT().Insert(testCtx, mock.MatchedBy(func(wallet *entity.Wallet) bool {
-			return wallet.UserID == input.UserID && wallet.Currency == input.Currency && wallet.ID.String() != ""
-		})).Return(nil, assert.AnError)
+		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, assert.AnError)
 
 		res, err := st.walletService.Create(testCtx, input)
 
@@ -79,13 +84,102 @@ func TestWalletCreator_Create(t *testing.T) {
 		assert.Nil(t, res)
 	})
 
-	t.Run("success create a wallet", func(t *testing.T) {
+	t.Run("create customer client returns error", func(t *testing.T) {
+		st := createWalletCreatorSuite(t)
+		input := createCreateWalletInput()
+		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return("", assert.AnError)
+
+		res, err := st.walletService.Create(testCtx, input)
+
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("insert customer returns error", func(t *testing.T) {
+		st := createWalletCreatorSuite(t)
+		input := createCreateWalletInput()
+		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
+		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
+			return customer.StripeCustomerID == testCustomerID
+		})).Return(nil, assert.AnError)
+		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {
+				assert.Error(t, fn(testCtxTx))
+				return assert.AnError
+			})
+
+		res, err := st.walletService.Create(testCtx, input)
+
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("insert wallet returns error", func(t *testing.T) {
+		st := createWalletCreatorSuite(t)
+		input := createCreateWalletInput()
+		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
+		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
+			return customer.StripeCustomerID == testCustomerID
+		})).Return(nil, nil)
+		st.walletRepo.EXPECT().InsertWallet(testCtxTx, mock.MatchedBy(func(wallet *entity.Wallet) bool {
+			return wallet.UserID == input.UserID && wallet.Currency == input.Currency && wallet.ID.String() != ""
+		})).Return(nil, assert.AnError)
+		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {
+				assert.Error(t, fn(testCtxTx))
+				return assert.AnError
+			})
+
+		res, err := st.walletService.Create(testCtx, input)
+
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("tx manager returns error", func(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
 		output := createWallet()
-		st.walletRepo.EXPECT().Insert(testCtx, mock.MatchedBy(func(wallet *entity.Wallet) bool {
+		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
+		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
+			return customer.StripeCustomerID == testCustomerID
+		})).Return(nil, nil)
+		st.walletRepo.EXPECT().InsertWallet(testCtxTx, mock.MatchedBy(func(wallet *entity.Wallet) bool {
 			return wallet.UserID == input.UserID && wallet.Currency == input.Currency && wallet.ID.String() != ""
 		})).Return(output, nil)
+		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {
+				assert.NoError(t, fn(testCtxTx))
+				return assert.AnError
+			})
+
+		res, err := st.walletService.Create(testCtx, input)
+
+		assert.Error(t, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("success create wallet", func(t *testing.T) {
+		st := createWalletCreatorSuite(t)
+		input := createCreateWalletInput()
+		output := createWallet()
+		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
+		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
+			return customer.StripeCustomerID == testCustomerID
+		})).Return(nil, nil)
+		st.walletRepo.EXPECT().InsertWallet(testCtxTx, mock.MatchedBy(func(wallet *entity.Wallet) bool {
+			return wallet.UserID == input.UserID && wallet.Currency == input.Currency && wallet.ID.String() != ""
+		})).Return(output, nil)
+		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
+			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {
+				assert.NoError(t, fn(testCtxTx))
+				return nil
+			})
 
 		res, err := st.walletService.Create(testCtx, input)
 
@@ -97,11 +191,15 @@ func TestWalletCreator_Create(t *testing.T) {
 }
 
 func createWalletCreatorSuite(t *testing.T) *WalletCreatorSuite {
+	m := uow.NewMockTxManager(t)
 	r := mockservice.NewMockCreateWalletRepository(t)
-	w := service.NewWalletCreator(r)
+	c := mockservice.NewMockCreateCustomerClient(t)
+	w := service.NewWalletCreator(m, r, c)
 	return &WalletCreatorSuite{
-		walletService: w,
-		walletRepo:    r,
+		walletService:  w,
+		txManager:      m,
+		walletRepo:     r,
+		customerClient: c,
 	}
 }
 

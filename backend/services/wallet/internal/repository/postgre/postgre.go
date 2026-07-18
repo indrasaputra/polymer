@@ -21,9 +21,9 @@ func NewWallet(q *db.Queries) *Wallet {
 	return &Wallet{queries: q}
 }
 
-// Insert inserts a wallet to the database.
+// InsertWallet inserts a wallet to the database.
 // If same data exists (user_id, currency), it will just return the record without insert or update.
-func (w *Wallet) Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error) {
+func (w *Wallet) InsertWallet(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error) {
 	if wallet == nil {
 		return nil, entity.ErrEmptyWallet
 	}
@@ -40,6 +40,7 @@ func (w *Wallet) Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wal
 	}
 	res, err := w.queries.InsertWallet(ctx, param)
 
+	// if wallet exist, postgre returns not found, so we handle this by querying the wallet
 	if err == sdkpostgre.ErrNotFound {
 		res, err = w.getUserActiveWalletByUserIDAndCurrency(ctx, wallet.UserID, wallet.Currency)
 		if err != nil {
@@ -47,10 +48,57 @@ func (w *Wallet) Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wal
 		}
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-Insert] fail insert wallet with tx", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-Insert] fail insert wallet", "error", err)
 		return nil, entity.ErrInternal
 	}
 	return convertDBWalletToEntityWallet(res), nil
+}
+
+// GetCustomerByUserID gets a customer by user id.
+func (w *Wallet) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
+	res, err := w.queries.GetCustomerByUserID(ctx, userID)
+	if err == sdkpostgre.ErrNotFound {
+		return nil, entity.ErrNilCustomer
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-GetCustomerByUserID] fail get customer", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBCustomerToEntityCustomer(res), nil
+}
+
+// InsertCustomer inserts a customer to the database.
+// If same data exists (by user_id), it will just return the record without insert or update.
+func (w *Wallet) InsertCustomer(ctx context.Context, customer *entity.Customer) (*entity.Customer, error) {
+	if customer == nil {
+		return nil, entity.ErrNilCustomer
+	}
+
+	param := db.InsertCustomerParams{
+		ID:               customer.ID,
+		UserID:           customer.UserID,
+		StripeCustomerID: customer.StripeCustomerID,
+		CreatedAt:        customer.CreatedAt,
+		UpdatedAt:        customer.UpdatedAt,
+		CreatedBy:        customer.UserID,
+		UpdatedBy:        customer.UserID,
+	}
+	res, err := w.queries.InsertCustomer(ctx, param)
+
+	// if customer exist, postgre returns not found, so we handle this by querying the customer
+	if err == sdkpostgre.ErrNotFound {
+		var c *entity.Customer
+		c, err = w.GetCustomerByUserID(ctx, customer.UserID)
+		if err != nil {
+			return nil, err
+		}
+		return c, nil
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-InsertCustomer] fail insert customer", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBCustomerToEntityCustomer(res), nil
 }
 
 func (w *Wallet) getUserActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*db.Wallet, error) {
@@ -83,5 +131,12 @@ func convertDBWalletToEntityWallet(w *db.Wallet) *entity.Wallet {
 			UpdatedBy: w.UpdatedBy,
 			DeletedBy: w.DeletedBy,
 		},
+	}
+}
+
+func convertDBCustomerToEntityCustomer(c *db.Customer) *entity.Customer {
+	return &entity.Customer{
+		UserID:           c.UserID,
+		StripeCustomerID: c.StripeCustomerID,
 	}
 }

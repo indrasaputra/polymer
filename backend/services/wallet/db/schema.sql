@@ -19,3 +19,20 @@ ON wallets USING btree (id, user_id);
 CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_wallets_user_id_currency
 ON wallets USING btree (user_id, currency)
 WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS customers (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    stripe_customer_id VARCHAR(20) NOT NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ,
+    created_by UUID NOT NULL,
+    updated_by UUID NOT NULL,
+    deleted_by UUID
+);
+
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_customers_user_id
+ON customers USING btree (user_id)
+WHERE deleted_at IS NULL;

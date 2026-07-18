@@ -13,6 +13,29 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const getCustomerByUserID = `-- name: GetCustomerByUserID :one
+SELECT id, user_id, stripe_customer_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM customers
+WHERE user_id = $1 AND deleted_at IS NULL
+LIMIT 1
+`
+
+func (q *Queries) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*Customer, error) {
+	row := q.db.QueryRow(ctx, getCustomerByUserID, userID)
+	var i Customer
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.StripeCustomerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
 const getUserActiveWalletByUserIdAndCurrency = `-- name: GetUserActiveWalletByUserIdAndCurrency :one
 SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
 WHERE user_id = $1 AND currency = $2 AND deleted_at IS NULL
@@ -32,6 +55,48 @@ func (q *Queries) GetUserActiveWalletByUserIdAndCurrency(ctx context.Context, ar
 		&i.UserID,
 		&i.Balance,
 		&i.Currency,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
+const insertCustomer = `-- name: InsertCustomer :one
+INSERT INTO customers (id, user_id, stripe_customer_id, created_at, updated_at, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (user_id) WHERE deleted_at IS NULL DO NOTHING
+RETURNING id, user_id, stripe_customer_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
+`
+
+type InsertCustomerParams struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	StripeCustomerID string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	CreatedBy        uuid.UUID
+	UpdatedBy        uuid.UUID
+}
+
+func (q *Queries) InsertCustomer(ctx context.Context, arg InsertCustomerParams) (*Customer, error) {
+	row := q.db.QueryRow(ctx, insertCustomer,
+		arg.ID,
+		arg.UserID,
+		arg.StripeCustomerID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.CreatedBy,
+		arg.UpdatedBy,
+	)
+	var i Customer
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.StripeCustomerID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

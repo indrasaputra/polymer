@@ -10,6 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
+	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/uow"
 )
 
 // CreateWallet defines interface to create wallet.
@@ -20,18 +21,31 @@ type CreateWallet interface {
 
 // CreateWalletRepository defines the interface to insert wallet to repository.
 type CreateWalletRepository interface {
-	// Insert inserts a wallet.
-	Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)
+	// InsertWallet inserts a wallet.
+	InsertWallet(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)
+	// InsertCustomer inserts a customer.
+	InsertCustomer(ctx context.Context, customer *entity.Customer) (*entity.Customer, error)
+	// GetCustomerByUserID gets customer. I decided to put it in wallet repository because the usage is closely
+	// related with wallet case, not a separate flow.
+	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
+}
+
+// CreateCustomerClient defines the interface to create customer in 3rd party side.
+type CreateCustomerClient interface {
+	// CreateCustomer creates a new customer and returns ID from 3rd party.
+	CreateCustomer(ctx context.Context, email string) (string, error)
 }
 
 // WalletCreator is responsible for creating a new wallet.
 type WalletCreator struct {
-	walletRepo CreateWalletRepository
+	txManager      uow.TxManager
+	walletRepo     CreateWalletRepository
+	customerClient CreateCustomerClient
 }
 
 // NewWalletCreator creates an instance of WalletCreator.
-func NewWalletCreator(r CreateWalletRepository) *WalletCreator {
-	return &WalletCreator{walletRepo: r}
+func NewWalletCreator(m uow.TxManager, r CreateWalletRepository, c CreateCustomerClient) *WalletCreator {
+	return &WalletCreator{txManager: m, walletRepo: r, customerClient: c}
 }
 
 // Create creates a new wallet.
@@ -43,14 +57,56 @@ func (wc *WalletCreator) Create(ctx context.Context, input *entity.CreateWalletI
 		return nil, err
 	}
 
-	wallet := convertCreateWalletInputToWallet(input)
-
-	result, err := wc.walletRepo.Insert(ctx, wallet)
+	customer, err := wc.getOrCreateCustomer(ctx, input)
 	if err != nil {
-		slog.ErrorContext(ctx, "[WalletCreator-Create] fail save to repository", "error", err)
 		return nil, err
 	}
+
+	wallet := convertCreateWalletInputToWallet(input)
+
+	var result *entity.Wallet
+	err = wc.txManager.Do(ctx, func(ctx context.Context) error {
+		_, err = wc.walletRepo.InsertCustomer(ctx, customer)
+		if err != nil {
+			slog.ErrorContext(ctx, "[WalletCreator-Create] fail save customer to repository", "error", err)
+			return err
+		}
+
+		result, err = wc.walletRepo.InsertWallet(ctx, wallet)
+		if err != nil {
+			slog.ErrorContext(ctx, "[WalletCreator-Create] fail save wallet to repository", "error", err)
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, entity.ErrInternal
+	}
+
 	return result, nil
+}
+
+func (wc *WalletCreator) getOrCreateCustomer(ctx context.Context, input *entity.CreateWalletInput) (*entity.Customer, error) {
+	customer, err := wc.walletRepo.GetCustomerByUserID(ctx, input.UserID)
+	if err != nil && err != entity.ErrNilCustomer {
+		slog.ErrorContext(ctx, "[WalletCreator-getOrCreateCustomer] fail get customer", "error", err)
+		return nil, entity.ErrInternal
+	}
+	if err == entity.ErrNilCustomer {
+		customerID, err := wc.customerClient.CreateCustomer(ctx, input.Email)
+		if err != nil {
+			slog.ErrorContext(ctx, "[WalletCreator-getOrCreateCustomer] fail create customer to client", "error", err)
+			return nil, entity.ErrInternal
+		}
+
+		customer = &entity.Customer{
+			ID:               uuid.Must(uuid.NewV7()),
+			UserID:           input.UserID,
+			StripeCustomerID: customerID,
+		}
+		setCustomerAuditableProperties(customer)
+	}
+	return customer, nil
 }
 
 func validateCreateWalletInput(wallet *entity.CreateWalletInput) error {
@@ -84,4 +140,12 @@ func setWalletAuditableProperties(wallet *entity.Wallet) {
 	wallet.UpdatedAt = now
 	wallet.CreatedBy = wallet.UserID
 	wallet.UpdatedBy = wallet.UserID
+}
+
+func setCustomerAuditableProperties(customer *entity.Customer) {
+	now := time.Now().UTC()
+	customer.CreatedAt = now
+	customer.UpdatedAt = now
+	customer.CreatedBy = customer.UserID
+	customer.UpdatedBy = customer.UserID
 }

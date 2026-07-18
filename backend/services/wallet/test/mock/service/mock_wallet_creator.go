@@ -7,6 +7,7 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
@@ -134,12 +135,148 @@ func (_m *MockCreateWalletRepository) EXPECT() *MockCreateWalletRepository_Expec
 	return &MockCreateWalletRepository_Expecter{mock: &_m.Mock}
 }
 
-// Insert provides a mock function for the type MockCreateWalletRepository
-func (_mock *MockCreateWalletRepository) Insert(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error) {
+// GetCustomerByUserID provides a mock function for the type MockCreateWalletRepository
+func (_mock *MockCreateWalletRepository) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
+	ret := _mock.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCustomerByUserID")
+	}
+
+	var r0 *entity.Customer
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*entity.Customer, error)); ok {
+		return returnFunc(ctx, userID)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, uuid.UUID) *entity.Customer); ok {
+		r0 = returnFunc(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entity.Customer)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = returnFunc(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockCreateWalletRepository_GetCustomerByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCustomerByUserID'
+type MockCreateWalletRepository_GetCustomerByUserID_Call struct {
+	*mock.Call
+}
+
+// GetCustomerByUserID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *MockCreateWalletRepository_Expecter) GetCustomerByUserID(ctx any, userID any) *MockCreateWalletRepository_GetCustomerByUserID_Call {
+	return &MockCreateWalletRepository_GetCustomerByUserID_Call{Call: _e.mock.On("GetCustomerByUserID", ctx, userID)}
+}
+
+func (_c *MockCreateWalletRepository_GetCustomerByUserID_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *MockCreateWalletRepository_GetCustomerByUserID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 uuid.UUID
+		if args[1] != nil {
+			arg1 = args[1].(uuid.UUID)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockCreateWalletRepository_GetCustomerByUserID_Call) Return(customer *entity.Customer, err error) *MockCreateWalletRepository_GetCustomerByUserID_Call {
+	_c.Call.Return(customer, err)
+	return _c
+}
+
+func (_c *MockCreateWalletRepository_GetCustomerByUserID_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)) *MockCreateWalletRepository_GetCustomerByUserID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// InsertCustomer provides a mock function for the type MockCreateWalletRepository
+func (_mock *MockCreateWalletRepository) InsertCustomer(ctx context.Context, customer *entity.Customer) (*entity.Customer, error) {
+	ret := _mock.Called(ctx, customer)
+
+	if len(ret) == 0 {
+		panic("no return value specified for InsertCustomer")
+	}
+
+	var r0 *entity.Customer
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.Customer) (*entity.Customer, error)); ok {
+		return returnFunc(ctx, customer)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, *entity.Customer) *entity.Customer); ok {
+		r0 = returnFunc(ctx, customer)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*entity.Customer)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, *entity.Customer) error); ok {
+		r1 = returnFunc(ctx, customer)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockCreateWalletRepository_InsertCustomer_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'InsertCustomer'
+type MockCreateWalletRepository_InsertCustomer_Call struct {
+	*mock.Call
+}
+
+// InsertCustomer is a helper method to define mock.On call
+//   - ctx context.Context
+//   - customer *entity.Customer
+func (_e *MockCreateWalletRepository_Expecter) InsertCustomer(ctx any, customer any) *MockCreateWalletRepository_InsertCustomer_Call {
+	return &MockCreateWalletRepository_InsertCustomer_Call{Call: _e.mock.On("InsertCustomer", ctx, customer)}
+}
+
+func (_c *MockCreateWalletRepository_InsertCustomer_Call) Run(run func(ctx context.Context, customer *entity.Customer)) *MockCreateWalletRepository_InsertCustomer_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 *entity.Customer
+		if args[1] != nil {
+			arg1 = args[1].(*entity.Customer)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockCreateWalletRepository_InsertCustomer_Call) Return(customer1 *entity.Customer, err error) *MockCreateWalletRepository_InsertCustomer_Call {
+	_c.Call.Return(customer1, err)
+	return _c
+}
+
+func (_c *MockCreateWalletRepository_InsertCustomer_Call) RunAndReturn(run func(ctx context.Context, customer *entity.Customer) (*entity.Customer, error)) *MockCreateWalletRepository_InsertCustomer_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// InsertWallet provides a mock function for the type MockCreateWalletRepository
+func (_mock *MockCreateWalletRepository) InsertWallet(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error) {
 	ret := _mock.Called(ctx, wallet)
 
 	if len(ret) == 0 {
-		panic("no return value specified for Insert")
+		panic("no return value specified for InsertWallet")
 	}
 
 	var r0 *entity.Wallet
@@ -162,19 +299,19 @@ func (_mock *MockCreateWalletRepository) Insert(ctx context.Context, wallet *ent
 	return r0, r1
 }
 
-// MockCreateWalletRepository_Insert_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Insert'
-type MockCreateWalletRepository_Insert_Call struct {
+// MockCreateWalletRepository_InsertWallet_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'InsertWallet'
+type MockCreateWalletRepository_InsertWallet_Call struct {
 	*mock.Call
 }
 
-// Insert is a helper method to define mock.On call
+// InsertWallet is a helper method to define mock.On call
 //   - ctx context.Context
 //   - wallet *entity.Wallet
-func (_e *MockCreateWalletRepository_Expecter) Insert(ctx any, wallet any) *MockCreateWalletRepository_Insert_Call {
-	return &MockCreateWalletRepository_Insert_Call{Call: _e.mock.On("Insert", ctx, wallet)}
+func (_e *MockCreateWalletRepository_Expecter) InsertWallet(ctx any, wallet any) *MockCreateWalletRepository_InsertWallet_Call {
+	return &MockCreateWalletRepository_InsertWallet_Call{Call: _e.mock.On("InsertWallet", ctx, wallet)}
 }
 
-func (_c *MockCreateWalletRepository_Insert_Call) Run(run func(ctx context.Context, wallet *entity.Wallet)) *MockCreateWalletRepository_Insert_Call {
+func (_c *MockCreateWalletRepository_InsertWallet_Call) Run(run func(ctx context.Context, wallet *entity.Wallet)) *MockCreateWalletRepository_InsertWallet_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -192,12 +329,105 @@ func (_c *MockCreateWalletRepository_Insert_Call) Run(run func(ctx context.Conte
 	return _c
 }
 
-func (_c *MockCreateWalletRepository_Insert_Call) Return(wallet1 *entity.Wallet, err error) *MockCreateWalletRepository_Insert_Call {
+func (_c *MockCreateWalletRepository_InsertWallet_Call) Return(wallet1 *entity.Wallet, err error) *MockCreateWalletRepository_InsertWallet_Call {
 	_c.Call.Return(wallet1, err)
 	return _c
 }
 
-func (_c *MockCreateWalletRepository_Insert_Call) RunAndReturn(run func(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)) *MockCreateWalletRepository_Insert_Call {
+func (_c *MockCreateWalletRepository_InsertWallet_Call) RunAndReturn(run func(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)) *MockCreateWalletRepository_InsertWallet_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// NewMockCreateCustomerClient creates a new instance of MockCreateCustomerClient. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
+// The first argument is typically a *testing.T value.
+func NewMockCreateCustomerClient(t interface {
+	mock.TestingT
+	Cleanup(func())
+}) *MockCreateCustomerClient {
+	mock := &MockCreateCustomerClient{}
+	mock.Mock.Test(t)
+
+	t.Cleanup(func() { mock.AssertExpectations(t) })
+
+	return mock
+}
+
+// MockCreateCustomerClient is an autogenerated mock type for the CreateCustomerClient type
+type MockCreateCustomerClient struct {
+	mock.Mock
+}
+
+type MockCreateCustomerClient_Expecter struct {
+	mock *mock.Mock
+}
+
+func (_m *MockCreateCustomerClient) EXPECT() *MockCreateCustomerClient_Expecter {
+	return &MockCreateCustomerClient_Expecter{mock: &_m.Mock}
+}
+
+// CreateCustomer provides a mock function for the type MockCreateCustomerClient
+func (_mock *MockCreateCustomerClient) CreateCustomer(ctx context.Context, email string) (string, error) {
+	ret := _mock.Called(ctx, email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateCustomer")
+	}
+
+	var r0 string
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
+		return returnFunc(ctx, email)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) string); ok {
+		r0 = returnFunc(ctx, email)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = returnFunc(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockCreateCustomerClient_CreateCustomer_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateCustomer'
+type MockCreateCustomerClient_CreateCustomer_Call struct {
+	*mock.Call
+}
+
+// CreateCustomer is a helper method to define mock.On call
+//   - ctx context.Context
+//   - email string
+func (_e *MockCreateCustomerClient_Expecter) CreateCustomer(ctx any, email any) *MockCreateCustomerClient_CreateCustomer_Call {
+	return &MockCreateCustomerClient_CreateCustomer_Call{Call: _e.mock.On("CreateCustomer", ctx, email)}
+}
+
+func (_c *MockCreateCustomerClient_CreateCustomer_Call) Run(run func(ctx context.Context, email string)) *MockCreateCustomerClient_CreateCustomer_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		run(
+			arg0,
+			arg1,
+		)
+	})
+	return _c
+}
+
+func (_c *MockCreateCustomerClient_CreateCustomer_Call) Return(s string, err error) *MockCreateCustomerClient_CreateCustomer_Call {
+	_c.Call.Return(s, err)
+	return _c
+}
+
+func (_c *MockCreateCustomerClient_CreateCustomer_Call) RunAndReturn(run func(ctx context.Context, email string) (string, error)) *MockCreateCustomerClient_CreateCustomer_Call {
 	_c.Call.Return(run)
 	return _c
 }
