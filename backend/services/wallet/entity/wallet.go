@@ -65,15 +65,15 @@ type Customer struct {
 
 // Transaction defines logical data related to transaction.
 type Transaction struct {
-	ID               uuid.UUID
-	UserID           uuid.UUID
+	PaymentSessionID *string
 	Type             TransactionType
 	Status           TransactionStatus
-	IdempotencyKey   uuid.UUID
 	Amount           decimal.Decimal
 	Currency         string
-	PaymentSessionID *string
 	Auditable
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	IdempotencyKey uuid.UUID
 }
 
 // TopupWalletInput defines logical input data related to topup wallet.
@@ -86,17 +86,24 @@ type TopupWalletInput struct {
 
 // TopupWalletOutput defines logical output data related to topup wallet.
 type TopupWalletOutput struct {
-	URL string
+	CheckoutSessionURL string
 }
 
 // CheckoutInput defines logical input data related to checkout process.
 type CheckoutInput struct {
-	Price            decimal.Decimal
+	Amount           decimal.Decimal
 	Currency         string
-	Quantity         int
-	UserID           uuid.UUID
 	StripeCustomerID string
 	SuccessURL       string
+	Purpose          string
+	Quantity         int
+	UserID           uuid.UUID
+}
+
+// CheckoutSession defines logical data related to checkout session.
+type CheckoutSession struct {
+	ID  string
+	URL string
 }
 
 // Auditable defines logical data related to audit.

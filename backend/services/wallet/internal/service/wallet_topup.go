@@ -3,10 +3,17 @@ package service
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	"github.com/shopspring/decimal"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
+)
+
+const (
+	topupQuantity = 1
+	topupPurpose  = "wallet topup"
 )
 
 // TopupWallet defines interface to topup wallet.
@@ -20,25 +27,35 @@ type TopupWallet interface {
 type TopupWalletRepository interface {
 	// GetPendingTransactionByIdempotencyKey gets a pending transaction by idempotency key.
 	GetPendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error)
+	// GetUserWalletByIDAndUserID gets a user's wallet.
+	GetUserWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error)
+	// GetCustomerByUserID gets a customer.
+	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
+	// InsertTransaction inserts a new transaction.
+	InsertTransaction(ctx context.Context, transaction *entity.Transaction) (*entity.Transaction, error)
 }
 
 // PaymentClient defines interface for payment.
 type PaymentClient interface {
-	// GetCheckoutSessionURL gets a checkout session url by id.
-	GetCheckoutSessionURL(ctx context.Context, id string) (string, error)
+	// GetCheckoutSession gets a checkout session by id.
+	GetCheckoutSession(ctx context.Context, id string) (*entity.CheckoutSession, error)
+	// CreateCheckoutSession creates a checkout session.
+	CreateCheckoutSession(ctx context.Context, input *entity.CheckoutInput) (*entity.CheckoutSession, error)
 }
 
 // WalletTopup is responsible for topup a wallet.
 type WalletTopup struct {
 	walletRepo    TopupWalletRepository
 	paymentClient PaymentClient
+	successURL    string
 }
 
 // NewWalletTopup creates an instance of WalletTopup.
-func NewWalletTopup(w TopupWalletRepository, p PaymentClient) *WalletTopup {
-	return &WalletTopup{walletRepo: w, paymentClient: p}
+func NewWalletTopup(w TopupWalletRepository, p PaymentClient, s string) *WalletTopup {
+	return &WalletTopup{walletRepo: w, paymentClient: p, successURL: s}
 }
 
+// Topup tops up a wallet.
 func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput) (*entity.TopupWalletOutput, error) {
 	if err := validateTopupWalletInput(input); err != nil {
 		slog.ErrorContext(ctx, "[WalletTopup-Topup] topup input is invalid", "error", err)
@@ -53,17 +70,49 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 	// there is pending transaction with inputted idempotency key.
 	// just return the payment checkout session.
 	if trx != nil && trx.PaymentSessionID != nil {
-		url, err := wt.paymentClient.GetCheckoutSessionURL(ctx, *trx.PaymentSessionID)
+		var session *entity.CheckoutSession
+		session, err = wt.paymentClient.GetCheckoutSession(ctx, *trx.PaymentSessionID)
 		if err != nil {
 			slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get checkout session", "error", err)
 			return nil, entity.ErrInternal
 		}
-		return &entity.TopupWalletOutput{URL: url}, nil
+		return &entity.TopupWalletOutput{CheckoutSessionURL: session.URL}, nil
 	}
 
-	// this flow below is for non-existent transaction
+	// all this flow below is for non-existent transaction
+	wallet, err := wt.walletRepo.GetUserWalletByIDAndUserID(ctx, input.WalletID, input.UserID)
+	if err != nil {
+		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get wallet", "error", err)
+		return nil, err
+	}
+	customer, err := wt.walletRepo.GetCustomerByUserID(ctx, input.UserID)
+	if err != nil {
+		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get customer", "error", err)
+		return nil, err
+	}
 
-	return nil, nil
+	checkoutInput := &entity.CheckoutInput{
+		Amount:           input.Amount,
+		Currency:         wallet.Currency,
+		Quantity:         topupQuantity,
+		UserID:           input.UserID,
+		StripeCustomerID: customer.StripeCustomerID,
+		SuccessURL:       wt.successURL,
+		Purpose:          topupPurpose,
+	}
+	session, err := wt.paymentClient.CreateCheckoutSession(ctx, checkoutInput)
+	if err != nil {
+		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail create checkout session", "error", err)
+		return nil, err
+	}
+
+	trx = createPendingTransaction(input, wallet.Currency, session.ID)
+	_, err = wt.walletRepo.InsertTransaction(ctx, trx)
+	if err != nil {
+		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail insert transaction", "error", err)
+		return nil, err
+	}
+	return &entity.TopupWalletOutput{CheckoutSessionURL: session.URL}, nil
 }
 
 func validateTopupWalletInput(input *entity.TopupWalletInput) error {
@@ -83,4 +132,27 @@ func validateTopupWalletInput(input *entity.TopupWalletInput) error {
 		return entity.ErrInvalidTopupAmount
 	}
 	return nil
+}
+
+func createPendingTransaction(input *entity.TopupWalletInput, currency string, sessionID string) *entity.Transaction {
+	trx := &entity.Transaction{
+		ID:               uuid.Must(uuid.NewV7()),
+		UserID:           input.UserID,
+		Type:             entity.TransactionTypeTopup,
+		Status:           entity.TransactionStatusPending,
+		IdempotencyKey:   input.IdempotencyKey,
+		Amount:           input.Amount,
+		Currency:         currency,
+		PaymentSessionID: &sessionID,
+	}
+	setTransactionAuditableProperties(trx)
+	return trx
+}
+
+func setTransactionAuditableProperties(transaction *entity.Transaction) {
+	now := time.Now().UTC()
+	transaction.CreatedAt = now
+	transaction.UpdatedAt = now
+	transaction.CreatedBy = transaction.UserID
+	transaction.UpdatedBy = transaction.UserID
 }

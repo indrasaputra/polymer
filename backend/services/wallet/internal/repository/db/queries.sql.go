@@ -93,6 +93,35 @@ func (q *Queries) GetUserActiveWalletByUserIdAndCurrency(ctx context.Context, ar
 	return &i, err
 }
 
+const getUserWalletByIDAndUserID = `-- name: GetUserWalletByIDAndUserID :one
+SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
+WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+LIMIT 1
+`
+
+type GetUserWalletByIDAndUserIDParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) GetUserWalletByIDAndUserID(ctx context.Context, arg GetUserWalletByIDAndUserIDParams) (*Wallet, error) {
+	row := q.db.QueryRow(ctx, getUserWalletByIDAndUserID, arg.ID, arg.UserID)
+	var i Wallet
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Balance,
+		&i.Currency,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
 const insertCustomer = `-- name: InsertCustomer :one
 INSERT INTO customers (id, user_id, stripe_customer_id, created_at, updated_at, created_by, updated_by)
 VALUES ($1, $2, $3, $4, $5, $6, $7)

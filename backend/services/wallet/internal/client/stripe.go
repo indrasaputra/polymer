@@ -4,8 +4,20 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
+	"github.com/bojanz/currency"
+	"github.com/shopspring/decimal"
 	"github.com/stripe/stripe-go/v86"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
+)
+
+const (
+	defaultCurrencyDigit = uint8(2)
+	ten                  = 10
+)
+
+var (
+	decimalTen = decimal.NewFromInt(ten)
 )
 
 // Stripe is responsible to connect with Stripe API.
@@ -34,13 +46,55 @@ func (s *Stripe) CreateCustomer(ctx context.Context, email string) (string, erro
 	return cust.ID, nil
 }
 
-// GetCheckoutSessionURL gets checkout session by ID.
-func (s *Stripe) GetCheckoutSessionURL(ctx context.Context, id string) (string, error) {
+// GetCheckoutSession gets checkout session by ID.
+func (s *Stripe) GetCheckoutSession(ctx context.Context, id string) (*entity.CheckoutSession, error) {
 	param := &stripe.CheckoutSessionRetrieveParams{}
 	session, err := s.client.V1CheckoutSessions.Retrieve(ctx, id, param)
 	if err != nil {
 		slog.ErrorContext(ctx, "[Stripe-GetCheckoutSessionURL] fail get checkout session", "error", err)
-		return "", entity.ErrInternal
+		return nil, entity.ErrInternal
 	}
-	return session.URL, nil
+	return &entity.CheckoutSession{ID: session.ID, URL: session.URL}, nil
+}
+
+// CreateCheckoutSession creates a checkout.
+func (s *Stripe) CreateCheckoutSession(ctx context.Context, input *entity.CheckoutInput) (*entity.CheckoutSession, error) {
+	amount := toSmallestUnitCurrency(input.Amount, input.Currency)
+
+	param := &stripe.CheckoutSessionCreateParams{
+		Customer:   stripe.String(input.StripeCustomerID),
+		SuccessURL: stripe.String(input.SuccessURL),
+		ReturnURL:  stripe.String(input.SuccessURL),
+		Mode:       stripe.String(stripe.CheckoutSessionModePayment),
+		LineItems: []*stripe.CheckoutSessionCreateLineItemParams{
+			{
+				Quantity: stripe.Int64(int64(input.Quantity)),
+				PriceData: &stripe.CheckoutSessionCreateLineItemPriceDataParams{
+					Currency:   stripe.String(input.Currency),
+					UnitAmount: stripe.Int64(amount),
+					ProductData: &stripe.CheckoutSessionCreateLineItemPriceDataProductDataParams{
+						Name:        stripe.String(input.Purpose),
+						Description: stripe.String(input.Purpose),
+					},
+				},
+			},
+		},
+	}
+
+	session, err := s.client.V1CheckoutSessions.Create(ctx, param)
+	if err != nil {
+		slog.ErrorContext(ctx, "[Stripe-CreateCheckoutSessionURL] fail create checkout session", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return &entity.CheckoutSession{ID: session.ID, URL: session.URL}, nil
+}
+
+func toSmallestUnitCurrency(amout decimal.Decimal, currencyCode string) int64 {
+	digit, ok := currency.GetDigits(currencyCode)
+	if !ok {
+		digit = defaultCurrencyDigit
+	}
+
+	cents := amout.Mul(decimalTen.Pow(decimal.NewFromInt32(int32(digit)))).IntPart()
+	return cents
 }
