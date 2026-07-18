@@ -6,6 +6,7 @@ require (
 	github.com/MicahParks/keyfunc/v3 v3.8.0
 	github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2 v2.0.3
 	github.com/avito-tech/go-transaction-manager/trm/v2 v2.0.3
+	github.com/bojanz/currency v1.4.4
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
@@ -19,6 +20,7 @@ require (
 	github.com/sethvargo/go-envconfig v1.3.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.11.1
+	github.com/stripe/stripe-go/v86 v86.1.1
 	github.com/vgarvardt/pgx-google-uuid/v5 v5.6.0
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.44.0
@@ -33,6 +35,7 @@ require (
 	github.com/MicahParks/jwkset v0.11.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
+	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect

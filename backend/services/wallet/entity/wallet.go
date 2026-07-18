@@ -22,6 +22,7 @@ type CurrentUser struct {
 // CreateWalletInput defines logical data for create wallet.
 type CreateWalletInput struct {
 	Currency string
+	Email    string
 	UserID   uuid.UUID
 }
 
@@ -29,6 +30,14 @@ type CreateWalletInput struct {
 type Wallet struct {
 	Balance  decimal.Decimal
 	Currency string
+	Auditable
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+// Customer defines logical data related to customer.
+type Customer struct {
+	StripeCustomerID string
 	Auditable
 	ID     uuid.UUID
 	UserID uuid.UUID

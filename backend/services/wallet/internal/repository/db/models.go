@@ -11,6 +11,18 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Customer struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	StripeCustomerID string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        *time.Time
+	CreatedBy        uuid.UUID
+	UpdatedBy        uuid.UUID
+	DeletedBy        *uuid.UUID
+}
+
 type Wallet struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID

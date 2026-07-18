@@ -8,3 +8,14 @@ RETURNING *;
 SELECT * FROM wallets
 WHERE user_id = $1 AND currency = $2 AND deleted_at IS NULL
 LIMIT 1;
+
+-- name: InsertCustomer :one
+INSERT INTO customers (id, user_id, stripe_customer_id, created_at, updated_at, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (user_id) WHERE deleted_at IS NULL DO NOTHING
+RETURNING *;
+
+-- name: GetCustomerByUserID :one
+SELECT * FROM customers
+WHERE user_id = $1 AND deleted_at IS NULL
+LIMIT 1;

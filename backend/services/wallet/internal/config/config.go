@@ -19,6 +19,7 @@ type Config struct {
 	Env                      string `env:"ENV,default=development"`
 	Port                     string `env:"PORT,default=9002"`
 	Supabase                 Supabase
+	Stripe                   Stripe
 	Postgre                  sdkpostgre.Config
 	GlobalTimeoutInSeconds   int `env:"GLOBAL_TIMEOUT_IN_SECONDS,default=60"`
 	GracefulTimeoutInSeconds int `env:"GRACEFUL_TIMEOUT_IN_SECONDS,default=5"`
@@ -27,6 +28,11 @@ type Config struct {
 // Supabase holds config for Supabase.
 type Supabase struct {
 	JwksURL string `env:"SUPABASE_JWKS_URL,required"`
+}
+
+// Stripe holds config for Stripe.
+type Stripe struct {
+	APIKey string `env:"STRIPE_API_KEY,required"`
 }
 
 // New creates an instance of Config.

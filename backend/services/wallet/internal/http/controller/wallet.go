@@ -41,7 +41,7 @@ func (w *Wallet) Create(c *echo.Context, currentUser *entity.CurrentUser) error 
 		return dto.SendResponse(c, nil, entity.ErrEmptyWallet, 0)
 	}
 
-	input := &entity.CreateWalletInput{UserID: currentUser.ID, Currency: request.Currency}
+	input := &entity.CreateWalletInput{UserID: currentUser.ID, Currency: request.Currency, Email: currentUser.Email}
 	result, err := w.creator.Create(c.Request().Context(), input)
 	return dto.SendResponse(c, result, err, http.StatusCreated)
 }

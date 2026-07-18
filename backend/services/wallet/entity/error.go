@@ -7,6 +7,11 @@ var (
 	ErrEmptyWallet = NewWalletError(http.StatusBadRequest, "Wallet is empty or nil")
 	// ErrInvalidUser occurs when user is invalid.
 	ErrInvalidUser = NewWalletError(http.StatusBadRequest, "User is invalid")
+	// ErrInvalidCurrency occurs when currency is invalid.
+	// It uses https://github.com/bojanz/currency as source of truth.
+	ErrInvalidCurrency = NewWalletError(http.StatusBadRequest, "Invalid currency")
+	// ErrNilCustomer occurs when customer is not found.
+	ErrNilCustomer = NewWalletError(http.StatusNotFound, "Customer not found")
 
 	// ErrBadRequest occurs when request is not as expected.
 	ErrBadRequest = NewWalletError(http.StatusBadRequest, "Bad request in body or param")

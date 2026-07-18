@@ -49,6 +49,8 @@ linters:
       statements: 40
     gocognit:
       min-complexity: 20
+    goconst:
+      ignore-tests: true
     gosec:
       excludes:
         - G115

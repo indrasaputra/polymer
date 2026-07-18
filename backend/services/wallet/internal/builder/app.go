@@ -1,6 +1,7 @@
 package builder
 
 import (
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/client"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/controller"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/repository/db"
@@ -20,7 +21,8 @@ type Dependency struct {
 // BuildWalletController builds wallet controller including all of its dependencies.
 func BuildWalletController(dep *Dependency) *controller.Wallet {
 	p := postgre.NewWallet(dep.Queries)
-	c := service.NewWalletCreator(p)
+	s := client.NewStripe(dep.Config.Stripe.APIKey)
+	c := service.NewWalletCreator(dep.TxManager, p, s)
 	return controller.NewWallet(c)
 }
 
