@@ -165,8 +165,8 @@ func (q *Queries) InsertCustomer(ctx context.Context, arg InsertCustomerParams) 
 }
 
 const insertTransaction = `-- name: InsertTransaction :one
-INSERT INTO transactions (id, user_id, type, status, amount, currency, checkout_session_id, created_at, updated_at, created_by, updated_by)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO transactions (id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
 `
 
@@ -175,6 +175,7 @@ type InsertTransactionParams struct {
 	UserID            uuid.UUID
 	Type              TransactionType
 	Status            TransactionStatus
+	IdempotencyKey    uuid.UUID
 	Amount            decimal.Decimal
 	Currency          string
 	CheckoutSessionID *string
@@ -190,6 +191,7 @@ func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionPa
 		arg.UserID,
 		arg.Type,
 		arg.Status,
+		arg.IdempotencyKey,
 		arg.Amount,
 		arg.Currency,
 		arg.CheckoutSessionID,

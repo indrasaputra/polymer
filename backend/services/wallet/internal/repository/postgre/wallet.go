@@ -146,6 +146,7 @@ func (w *Wallet) InsertTransaction(ctx context.Context, transaction *entity.Tran
 		ID:                transaction.ID,
 		UserID:            transaction.UserID,
 		Type:              db.TransactionType(transaction.Type),
+		IdempotencyKey:    transaction.IdempotencyKey,
 		Status:            db.TransactionStatus(transaction.Status),
 		Amount:            transaction.Amount,
 		Currency:          transaction.Currency,

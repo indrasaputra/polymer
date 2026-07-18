@@ -20,10 +20,11 @@ type Dependency struct {
 
 // BuildWalletController builds wallet controller including all of its dependencies.
 func BuildWalletController(dep *Dependency) *controller.Wallet {
-	p := postgre.NewWallet(dep.Queries)
+	r := postgre.NewWallet(dep.Queries)
 	s := client.NewStripe(dep.Config.Stripe.APIKey)
-	c := service.NewWalletCreator(dep.TxManager, p, s)
-	return controller.NewWallet(c)
+	c := service.NewWalletCreator(dep.TxManager, r, s)
+	t := service.NewWalletTopup(r, s, dep.Config.TopupSuccessURL)
+	return controller.NewWallet(c, t)
 }
 
 // BuildQueries builds sqlc queries.

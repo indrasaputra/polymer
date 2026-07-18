@@ -26,8 +26,8 @@ WHERE user_id = $1 AND deleted_at IS NULL
 LIMIT 1;
 
 -- name: InsertTransaction :one
-INSERT INTO transactions (id, user_id, type, status, amount, currency, checkout_session_id, created_at, updated_at, created_by, updated_by)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+INSERT INTO transactions (id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 
 -- name: GetPendingTransactionByIdempotencyKey :one

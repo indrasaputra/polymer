@@ -18,6 +18,7 @@ type Config struct {
 	ServiceName              string `env:"SERVICE_NAME,default=wallet"`
 	Env                      string `env:"ENV,default=development"`
 	Port                     string `env:"PORT,default=9002"`
+	TopupSuccessURL          string `env:"TOPUP_SUCCESS_URL,default=http://localhost:9000"`
 	Supabase                 Supabase
 	Stripe                   Stripe
 	Postgre                  sdkpostgre.Config

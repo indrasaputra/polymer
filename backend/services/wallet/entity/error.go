@@ -24,6 +24,8 @@ var (
 	ErrNilWallet = NewWalletError(http.StatusNotFound, "Wallet not found")
 	// ErrEmptyInput occurs when input is empty.
 	ErrEmptyInput = NewWalletError(http.StatusBadRequest, "Input is empty")
+	// ErrEmptyTopup occurs when topup is empty.
+	ErrEmptyTopup = NewWalletError(http.StatusBadRequest, "Empty topup")
 
 	// ErrBadRequest occurs when request is not as expected.
 	ErrBadRequest = NewWalletError(http.StatusBadRequest, "Bad request in body or param")

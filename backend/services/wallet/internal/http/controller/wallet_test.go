@@ -138,10 +138,12 @@ func TestWallet_Create(t *testing.T) {
 }
 
 func createWalletSuite(t *testing.T) *WalletSuite {
-	s := mockservice.NewMockCreateWallet(t)
-	w := controller.NewWallet(s)
+	c := mockservice.NewMockCreateWallet(t)
+	tp := mockservice.NewMockTopupWallet(t)
+
+	w := controller.NewWallet(c, tp)
 	return &WalletSuite{
 		walletController: w,
-		walletService:    s,
+		walletService:    c,
 	}
 }
