@@ -3,7 +3,7 @@ My playground to implement everything I find it interesting
 
 ---
 
-## Supabase 2.106.0
+## Supabase 2.109.1
 
 ## Node.js 24.16.0
 
