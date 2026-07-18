@@ -107,6 +107,60 @@ func (q *Queries) InsertCustomer(ctx context.Context, arg InsertCustomerParams) 
 	return &i, err
 }
 
+const insertTransaction = `-- name: InsertTransaction :one
+INSERT INTO transactions (id, user_id, type, status, amount, currency, payment_session_id, created_at, updated_at, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+RETURNING id, user_id, type, status, idempotency_key, amount, currency, payment_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
+`
+
+type InsertTransactionParams struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	Type             TransactionType
+	Status           TransactionStatus
+	Amount           decimal.Decimal
+	Currency         string
+	PaymentSessionID *string
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	CreatedBy        uuid.UUID
+	UpdatedBy        uuid.UUID
+}
+
+func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionParams) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, insertTransaction,
+		arg.ID,
+		arg.UserID,
+		arg.Type,
+		arg.Status,
+		arg.Amount,
+		arg.Currency,
+		arg.PaymentSessionID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.CreatedBy,
+		arg.UpdatedBy,
+	)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Status,
+		&i.IdempotencyKey,
+		&i.Amount,
+		&i.Currency,
+		&i.PaymentSessionID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
 const insertWallet = `-- name: InsertWallet :one
 INSERT INTO wallets (id, user_id, balance, currency, created_at, updated_at, created_by, updated_by)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)

@@ -11,7 +11,7 @@ tidy: ## Run `go mod tidy`.
 
 .PHONY: lint.sql
 lint.sql: ## Lint sql files.
-	sqlfluff fix --show-lint-violations -d postgres -e LT05,AM04,AM09,PG01
+	sqlfluff fix --show-lint-violations -d postgres -e LT05,AM04,AM09,PG01,RF04
 
 .PHONY: lint.struct
 lint.struct: ## Run fieldalignment.
@@ -55,6 +55,10 @@ migration: ## Create database migration using atlas.
 .PHONY: migrate
 migrate: ## Apply migration.
 	atlas migrate apply --env local
+
+.PHONY: migration.rehash
+migration.rehash: ## Rehash atlas migration sum.
+	atlas migrate hash --env local
 
 ##@ Generator
 .PHONY: gen.mock
