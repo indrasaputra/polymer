@@ -43,6 +43,19 @@ type Customer struct {
 	UserID uuid.UUID
 }
 
+// TopupWalletInput defines logical input data related to topup wallet.
+type TopupWalletInput struct {
+	Amount         decimal.Decimal
+	WalletID       uuid.UUID
+	UserID         uuid.UUID
+	IdempotencyKey uuid.UUID
+}
+
+// TopupWalletOutput defines logical output data related to topup wallet.
+type TopupWalletOutput struct {
+	URL string
+}
+
 // Auditable defines logical data related to audit.
 type Auditable struct {
 	CreatedAt time.Time

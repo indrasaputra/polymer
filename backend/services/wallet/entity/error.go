@@ -7,11 +7,19 @@ var (
 	ErrEmptyWallet = NewWalletError(http.StatusBadRequest, "Wallet is empty or nil")
 	// ErrInvalidUser occurs when user is invalid.
 	ErrInvalidUser = NewWalletError(http.StatusBadRequest, "User is invalid")
+	// ErrInvalidWallet occurs when wallet is invalid.
+	ErrInvalidWallet = NewWalletError(http.StatusBadRequest, "Wallet is invalid")
+	// ErrInvalidIdempotencyKey occurs when idempotency key is invalid.
+	ErrInvalidIdempotencyKey = NewWalletError(http.StatusBadRequest, "Idempotency key is invalid")
+	// ErrInvalidTopupAmount occurs when topup amount is invalid (less than or equal to zero).
+	ErrInvalidTopupAmount = NewWalletError(http.StatusBadRequest, "Invalid topup amount")
 	// ErrInvalidCurrency occurs when currency is invalid.
 	// It uses https://github.com/bojanz/currency as source of truth.
 	ErrInvalidCurrency = NewWalletError(http.StatusBadRequest, "Invalid currency")
 	// ErrNilCustomer occurs when customer is not found.
 	ErrNilCustomer = NewWalletError(http.StatusNotFound, "Customer not found")
+	// ErrEmptyInput occurs when input is empty.
+	ErrEmptyInput = NewWalletError(http.StatusBadRequest, "Input is empty")
 
 	// ErrBadRequest occurs when request is not as expected.
 	ErrBadRequest = NewWalletError(http.StatusBadRequest, "Bad request in body or param")
