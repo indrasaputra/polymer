@@ -7,11 +7,31 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// ContextKey is just a typed-string.
-type ContextKey string
+type (
+	// ContextKey is just a typed-string.
+	ContextKey string
+	// TransactionType defines transaction's type.
+	TransactionType string
+	// TransactionStatus defines transaction's status.
+	TransactionStatus string
+)
 
-// ContextKeyCurrentUser should be used as key in context.
-const ContextKeyCurrentUser = "CURRENT_USER"
+const (
+	// ContextKeyCurrentUser should be used as key in context.
+	ContextKeyCurrentUser = "CURRENT_USER"
+
+	// TransactionTypeTopup is "topup".
+	TransactionTypeTopup TransactionType = "topup"
+
+	// TransactionStatusPending is "pending".
+	TransactionStatusPending TransactionStatus = "pending"
+	// TransactionStatusCompleted is "completed".
+	TransactionStatusCompleted TransactionStatus = "completed"
+	// TransactionStatusFailed is "pending".
+	TransactionStatusFailed TransactionStatus = "failed"
+	// TransactionStatusCancelled is "cancelled".
+	TransactionStatusCancelled TransactionStatus = "cancelled"
+)
 
 // CurrentUser represents current user from JWT.
 type CurrentUser struct {
@@ -19,7 +39,7 @@ type CurrentUser struct {
 	ID    uuid.UUID
 }
 
-// CreateWalletInput defines logical data for create wallet.
+// CreateWalletInput defines logical input data for create wallet.
 type CreateWalletInput struct {
 	Currency string
 	Email    string
@@ -43,6 +63,19 @@ type Customer struct {
 	UserID uuid.UUID
 }
 
+// Transaction defines logical data related to transaction.
+type Transaction struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	Type             TransactionType
+	Status           TransactionStatus
+	IdempotencyKey   uuid.UUID
+	Amount           decimal.Decimal
+	Currency         string
+	PaymentSessionID *string
+	Auditable
+}
+
 // TopupWalletInput defines logical input data related to topup wallet.
 type TopupWalletInput struct {
 	Amount         decimal.Decimal
@@ -54,6 +87,16 @@ type TopupWalletInput struct {
 // TopupWalletOutput defines logical output data related to topup wallet.
 type TopupWalletOutput struct {
 	URL string
+}
+
+// CheckoutInput defines logical input data related to checkout process.
+type CheckoutInput struct {
+	Price            decimal.Decimal
+	Currency         string
+	Quantity         int
+	UserID           uuid.UUID
+	StripeCustomerID string
+	SuccessURL       string
 }
 
 // Auditable defines logical data related to audit.

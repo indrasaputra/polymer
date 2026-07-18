@@ -115,7 +115,7 @@ type Transaction struct {
 	UserID           uuid.UUID
 	Type             TransactionType
 	Status           TransactionStatus
-	IdempotencyKey   string
+	IdempotencyKey   uuid.UUID
 	Amount           decimal.Decimal
 	Currency         string
 	PaymentSessionID *string

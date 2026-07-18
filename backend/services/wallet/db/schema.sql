@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     type TRANSACTION_TYPE NOT NULL,
     status TRANSACTION_STATUS NOT NULL DEFAULT 'pending',
 
-    idempotency_key VARCHAR(255) UNIQUE NOT NULL,
+    idempotency_key UUID UNIQUE NOT NULL,
 
     amount DECIMAL(20, 5) NOT NULL,
     currency VARCHAR(3) NOT NULL,

@@ -24,3 +24,8 @@ LIMIT 1;
 INSERT INTO transactions (id, user_id, type, status, amount, currency, payment_session_id, created_at, updated_at, created_by, updated_by)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 RETURNING *;
+
+-- name: GetPendingTransactionByIdempotencyKey :one
+SELECT * FROM transactions
+WHERE idempotency_key = $1 AND status = 'pending' AND deleted_at IS NULL
+LIMIT 1;

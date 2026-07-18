@@ -18,6 +18,8 @@ var (
 	ErrInvalidCurrency = NewWalletError(http.StatusBadRequest, "Invalid currency")
 	// ErrNilCustomer occurs when customer is not found.
 	ErrNilCustomer = NewWalletError(http.StatusNotFound, "Customer not found")
+	// ErrNilTransaction occurs when transaction is not found.
+	ErrNilTransaction = NewWalletError(http.StatusNotFound, "Transaction not found")
 	// ErrEmptyInput occurs when input is empty.
 	ErrEmptyInput = NewWalletError(http.StatusBadRequest, "Input is empty")
 

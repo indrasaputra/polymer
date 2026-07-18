@@ -8,7 +8,7 @@ CREATE TABLE public.transactions (
     user_id uuid NOT NULL,
     type public.transaction_type NOT NULL,
     status public.transaction_status NOT NULL DEFAULT 'pending',
-    idempotency_key character varying(255) NOT NULL,
+    idempotency_key uuid NOT NULL,
     amount numeric(20, 5) NOT NULL,
     currency character varying(3) NOT NULL,
     payment_session_id character varying(255) NULL,

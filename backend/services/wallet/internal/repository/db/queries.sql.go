@@ -36,6 +36,34 @@ func (q *Queries) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*C
 	return &i, err
 }
 
+const getPendingTransactionByIdempotencyKey = `-- name: GetPendingTransactionByIdempotencyKey :one
+SELECT id, user_id, type, status, idempotency_key, amount, currency, payment_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM transactions
+WHERE idempotency_key = $1 AND status = 'pending' AND deleted_at IS NULL
+LIMIT 1
+`
+
+func (q *Queries) GetPendingTransactionByIdempotencyKey(ctx context.Context, idempotencyKey uuid.UUID) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, getPendingTransactionByIdempotencyKey, idempotencyKey)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Status,
+		&i.IdempotencyKey,
+		&i.Amount,
+		&i.Currency,
+		&i.PaymentSessionID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
 const getUserActiveWalletByUserIdAndCurrency = `-- name: GetUserActiveWalletByUserIdAndCurrency :one
 SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
 WHERE user_id = $1 AND currency = $2 AND deleted_at IS NULL

@@ -54,6 +54,22 @@ func (w *Wallet) InsertWallet(ctx context.Context, wallet *entity.Wallet) (*enti
 	return convertDBWalletToEntityWallet(res), nil
 }
 
+func (w *Wallet) getUserActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*db.Wallet, error) {
+	res, err := w.queries.GetUserActiveWalletByUserIdAndCurrency(ctx, db.GetUserActiveWalletByUserIdAndCurrencyParams{
+		UserID:   userID,
+		Currency: currency,
+	})
+
+	if err == sdkpostgre.ErrNotFound {
+		return nil, entity.ErrEmptyWallet
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-getWalletByUserIDAndCurrency] internal error", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return res, nil
+}
+
 // GetCustomerByUserID gets a customer by user id.
 func (w *Wallet) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
 	res, err := w.queries.GetCustomerByUserID(ctx, userID)
@@ -101,20 +117,16 @@ func (w *Wallet) InsertCustomer(ctx context.Context, customer *entity.Customer) 
 	return convertDBCustomerToEntityCustomer(res), nil
 }
 
-func (w *Wallet) getUserActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*db.Wallet, error) {
-	res, err := w.queries.GetUserActiveWalletByUserIdAndCurrency(ctx, db.GetUserActiveWalletByUserIdAndCurrencyParams{
-		UserID:   userID,
-		Currency: currency,
-	})
-
+func (w *Wallet) GetPendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error) {
+	res, err := w.queries.GetPendingTransactionByIdempotencyKey(ctx, key)
 	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrEmptyWallet
+		return nil, entity.ErrNilTransaction
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-getWalletByUserIDAndCurrency] internal error", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-GetPendingTransactionByIdempotencyKey] fail get transaction", "error", err)
 		return nil, entity.ErrInternal
 	}
-	return res, nil
+	return convertDBTransactionToEntityTransaction(res), nil
 }
 
 func convertDBWalletToEntityWallet(w *db.Wallet) *entity.Wallet {
@@ -136,7 +148,37 @@ func convertDBWalletToEntityWallet(w *db.Wallet) *entity.Wallet {
 
 func convertDBCustomerToEntityCustomer(c *db.Customer) *entity.Customer {
 	return &entity.Customer{
+		ID:               c.ID,
 		UserID:           c.UserID,
 		StripeCustomerID: c.StripeCustomerID,
+		Auditable: entity.Auditable{
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+			DeletedAt: c.DeletedAt,
+			CreatedBy: c.CreatedBy,
+			UpdatedBy: c.UpdatedBy,
+			DeletedBy: c.DeletedBy,
+		},
+	}
+}
+
+func convertDBTransactionToEntityTransaction(t *db.Transaction) *entity.Transaction {
+	return &entity.Transaction{
+		ID:               t.ID,
+		UserID:           t.UserID,
+		Type:             entity.TransactionType(t.Type),
+		Status:           entity.TransactionStatus(t.Status),
+		IdempotencyKey:   t.IdempotencyKey,
+		Amount:           t.Amount,
+		Currency:         t.Currency,
+		PaymentSessionID: t.PaymentSessionID,
+		Auditable: entity.Auditable{
+			CreatedAt: t.CreatedAt,
+			UpdatedAt: t.UpdatedAt,
+			DeletedAt: t.DeletedAt,
+			CreatedBy: t.CreatedBy,
+			UpdatedBy: t.UpdatedBy,
+			DeletedBy: t.DeletedBy,
+		},
 	}
 }

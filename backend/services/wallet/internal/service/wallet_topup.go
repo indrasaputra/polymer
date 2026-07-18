@@ -18,16 +18,25 @@ type TopupWallet interface {
 
 // TopupWalletRepository defines the interface to update wallet in repository.
 type TopupWalletRepository interface {
+	// GetPendingTransactionByIdempotencyKey gets a pending transaction by idempotency key.
+	GetPendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error)
+}
+
+// PaymentClient defines interface for payment.
+type PaymentClient interface {
+	// GetCheckoutSessionURL gets a checkout session url by id.
+	GetCheckoutSessionURL(ctx context.Context, id string) (string, error)
 }
 
 // WalletTopup is responsible for topup a wallet.
 type WalletTopup struct {
-	walletRepo TopupWalletRepository
+	walletRepo    TopupWalletRepository
+	paymentClient PaymentClient
 }
 
 // NewWalletTopup creates an instance of WalletTopup.
-func NewWalletTopup(w TopupWalletRepository) *WalletTopup {
-	return &WalletTopup{walletRepo: w}
+func NewWalletTopup(w TopupWalletRepository, p PaymentClient) *WalletTopup {
+	return &WalletTopup{walletRepo: w, paymentClient: p}
 }
 
 func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput) (*entity.TopupWalletOutput, error) {
@@ -35,6 +44,25 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 		slog.ErrorContext(ctx, "[WalletTopup-Topup] topup input is invalid", "error", err)
 		return nil, err
 	}
+
+	trx, err := wt.walletRepo.GetPendingTransactionByIdempotencyKey(ctx, input.IdempotencyKey)
+	if err != nil && err != entity.ErrNilTransaction {
+		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get transaction", "error", err)
+		return nil, entity.ErrInternal
+	}
+	// there is pending transaction with inputted idempotency key.
+	// just return the payment checkout session.
+	if trx != nil && trx.PaymentSessionID != nil {
+		url, err := wt.paymentClient.GetCheckoutSessionURL(ctx, *trx.PaymentSessionID)
+		if err != nil {
+			slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get checkout session", "error", err)
+			return nil, entity.ErrInternal
+		}
+		return &entity.TopupWalletOutput{URL: url}, nil
+	}
+
+	// this flow below is for non-existent transaction
+
 	return nil, nil
 }
 

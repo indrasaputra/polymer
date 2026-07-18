@@ -25,7 +25,7 @@ type CreateWalletRepository interface {
 	InsertWallet(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)
 	// InsertCustomer inserts a customer.
 	InsertCustomer(ctx context.Context, customer *entity.Customer) (*entity.Customer, error)
-	// GetCustomerByUserID gets customer. I decided to put it in wallet repository because the usage is closely
+	// GetCustomerByUserID gets a customer. I decided to put it in wallet repository because the usage is closely
 	// related with wallet case, not a separate flow.
 	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
 }
