@@ -11,7 +11,7 @@ CREATE TABLE public.transactions (
     idempotency_key uuid NOT NULL,
     amount numeric(20, 5) NOT NULL,
     currency character varying(3) NOT NULL,
-    payment_session_id character varying(255) NULL,
+    checkout_session_id character varying(255) NULL,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamptz NULL,
@@ -19,8 +19,8 @@ CREATE TABLE public.transactions (
     updated_by uuid NOT NULL,
     deleted_by uuid NULL,
     PRIMARY KEY (id),
-    CONSTRAINT transactions_idempotency_key_key UNIQUE (idempotency_key),
-    CONSTRAINT transactions_payment_session_id_key UNIQUE (payment_session_id)
+    CONSTRAINT transactions_checkout_session_id_key UNIQUE (checkout_session_id),
+    CONSTRAINT transactions_idempotency_key_key UNIQUE (idempotency_key)
 );
 -- Create index "idx_transactions_user_id_status" to table: "transactions"
 CREATE INDEX idx_transactions_user_id_status ON public.transactions (user_id, status);

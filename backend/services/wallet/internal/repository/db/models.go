@@ -111,20 +111,20 @@ type Customer struct {
 }
 
 type Transaction struct {
-	ID               uuid.UUID
-	UserID           uuid.UUID
-	Type             TransactionType
-	Status           TransactionStatus
-	IdempotencyKey   uuid.UUID
-	Amount           decimal.Decimal
-	Currency         string
-	PaymentSessionID *string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	DeletedAt        *time.Time
-	CreatedBy        uuid.UUID
-	UpdatedBy        uuid.UUID
-	DeletedBy        *uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              TransactionType
+	Status            TransactionStatus
+	IdempotencyKey    uuid.UUID
+	Amount            decimal.Decimal
+	Currency          string
+	CheckoutSessionID *string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	DeletedAt         *time.Time
+	CreatedBy         uuid.UUID
+	UpdatedBy         uuid.UUID
+	DeletedBy         *uuid.UUID
 }
 
 type Wallet struct {

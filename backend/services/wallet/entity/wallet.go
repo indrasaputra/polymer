@@ -65,11 +65,11 @@ type Customer struct {
 
 // Transaction defines logical data related to transaction.
 type Transaction struct {
-	PaymentSessionID *string
-	Type             TransactionType
-	Status           TransactionStatus
-	Amount           decimal.Decimal
-	Currency         string
+	CheckoutSessionID *string
+	Type              TransactionType
+	Status            TransactionStatus
+	Amount            decimal.Decimal
+	Currency          string
 	Auditable
 	ID             uuid.UUID
 	UserID         uuid.UUID

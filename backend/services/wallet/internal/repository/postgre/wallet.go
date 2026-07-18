@@ -143,17 +143,17 @@ func (w *Wallet) InsertTransaction(ctx context.Context, transaction *entity.Tran
 	}
 
 	param := db.InsertTransactionParams{
-		ID:               transaction.ID,
-		UserID:           transaction.UserID,
-		Type:             db.TransactionType(transaction.Type),
-		Status:           db.TransactionStatus(transaction.Status),
-		Amount:           transaction.Amount,
-		Currency:         transaction.Currency,
-		PaymentSessionID: transaction.PaymentSessionID,
-		CreatedAt:        transaction.CreatedAt,
-		UpdatedAt:        transaction.UpdatedAt,
-		CreatedBy:        transaction.UserID,
-		UpdatedBy:        transaction.UserID,
+		ID:                transaction.ID,
+		UserID:            transaction.UserID,
+		Type:              db.TransactionType(transaction.Type),
+		Status:            db.TransactionStatus(transaction.Status),
+		Amount:            transaction.Amount,
+		Currency:          transaction.Currency,
+		CheckoutSessionID: transaction.CheckoutSessionID,
+		CreatedAt:         transaction.CreatedAt,
+		UpdatedAt:         transaction.UpdatedAt,
+		CreatedBy:         transaction.UserID,
+		UpdatedBy:         transaction.UserID,
 	}
 
 	trx, err := w.queries.InsertTransaction(ctx, param)
@@ -212,14 +212,14 @@ func convertDBCustomerToEntityCustomer(c *db.Customer) *entity.Customer {
 
 func convertDBTransactionToEntityTransaction(t *db.Transaction) *entity.Transaction {
 	return &entity.Transaction{
-		ID:               t.ID,
-		UserID:           t.UserID,
-		Type:             entity.TransactionType(t.Type),
-		Status:           entity.TransactionStatus(t.Status),
-		IdempotencyKey:   t.IdempotencyKey,
-		Amount:           t.Amount,
-		Currency:         t.Currency,
-		PaymentSessionID: t.PaymentSessionID,
+		ID:                t.ID,
+		UserID:            t.UserID,
+		Type:              entity.TransactionType(t.Type),
+		Status:            entity.TransactionStatus(t.Status),
+		IdempotencyKey:    t.IdempotencyKey,
+		Amount:            t.Amount,
+		Currency:          t.Currency,
+		CheckoutSessionID: t.CheckoutSessionID,
 		Auditable: entity.Auditable{
 			CreatedAt: t.CreatedAt,
 			UpdatedAt: t.UpdatedAt,

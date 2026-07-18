@@ -37,7 +37,7 @@ func (q *Queries) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*C
 }
 
 const getPendingTransactionByIdempotencyKey = `-- name: GetPendingTransactionByIdempotencyKey :one
-SELECT id, user_id, type, status, idempotency_key, amount, currency, payment_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM transactions
+SELECT id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM transactions
 WHERE idempotency_key = $1 AND status = 'pending' AND deleted_at IS NULL
 LIMIT 1
 `
@@ -53,7 +53,7 @@ func (q *Queries) GetPendingTransactionByIdempotencyKey(ctx context.Context, ide
 		&i.IdempotencyKey,
 		&i.Amount,
 		&i.Currency,
-		&i.PaymentSessionID,
+		&i.CheckoutSessionID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
@@ -165,23 +165,23 @@ func (q *Queries) InsertCustomer(ctx context.Context, arg InsertCustomerParams) 
 }
 
 const insertTransaction = `-- name: InsertTransaction :one
-INSERT INTO transactions (id, user_id, type, status, amount, currency, payment_session_id, created_at, updated_at, created_by, updated_by)
+INSERT INTO transactions (id, user_id, type, status, amount, currency, checkout_session_id, created_at, updated_at, created_by, updated_by)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-RETURNING id, user_id, type, status, idempotency_key, amount, currency, payment_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
+RETURNING id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
 `
 
 type InsertTransactionParams struct {
-	ID               uuid.UUID
-	UserID           uuid.UUID
-	Type             TransactionType
-	Status           TransactionStatus
-	Amount           decimal.Decimal
-	Currency         string
-	PaymentSessionID *string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
-	CreatedBy        uuid.UUID
-	UpdatedBy        uuid.UUID
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              TransactionType
+	Status            TransactionStatus
+	Amount            decimal.Decimal
+	Currency          string
+	CheckoutSessionID *string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	CreatedBy         uuid.UUID
+	UpdatedBy         uuid.UUID
 }
 
 func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionParams) (*Transaction, error) {
@@ -192,7 +192,7 @@ func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionPa
 		arg.Status,
 		arg.Amount,
 		arg.Currency,
-		arg.PaymentSessionID,
+		arg.CheckoutSessionID,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 		arg.CreatedBy,
@@ -207,7 +207,7 @@ func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionPa
 		&i.IdempotencyKey,
 		&i.Amount,
 		&i.Currency,
-		&i.PaymentSessionID,
+		&i.CheckoutSessionID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,

@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     amount DECIMAL(20, 5) NOT NULL,
     currency VARCHAR(3) NOT NULL,
 
-    payment_session_id VARCHAR(255) UNIQUE,
+    checkout_session_id VARCHAR(255) UNIQUE,
 
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,

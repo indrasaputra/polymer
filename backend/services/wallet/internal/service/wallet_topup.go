@@ -69,9 +69,9 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 	}
 	// there is pending transaction with inputted idempotency key.
 	// just return the payment checkout session.
-	if trx != nil && trx.PaymentSessionID != nil {
+	if trx != nil && trx.CheckoutSessionID != nil {
 		var session *entity.CheckoutSession
-		session, err = wt.paymentClient.GetCheckoutSession(ctx, *trx.PaymentSessionID)
+		session, err = wt.paymentClient.GetCheckoutSession(ctx, *trx.CheckoutSessionID)
 		if err != nil {
 			slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get checkout session", "error", err)
 			return nil, entity.ErrInternal
@@ -136,14 +136,14 @@ func validateTopupWalletInput(input *entity.TopupWalletInput) error {
 
 func createPendingTransaction(input *entity.TopupWalletInput, currency string, sessionID string) *entity.Transaction {
 	trx := &entity.Transaction{
-		ID:               uuid.Must(uuid.NewV7()),
-		UserID:           input.UserID,
-		Type:             entity.TransactionTypeTopup,
-		Status:           entity.TransactionStatusPending,
-		IdempotencyKey:   input.IdempotencyKey,
-		Amount:           input.Amount,
-		Currency:         currency,
-		PaymentSessionID: &sessionID,
+		ID:                uuid.Must(uuid.NewV7()),
+		UserID:            input.UserID,
+		Type:              entity.TransactionTypeTopup,
+		Status:            entity.TransactionStatusPending,
+		IdempotencyKey:    input.IdempotencyKey,
+		Amount:            input.Amount,
+		Currency:          currency,
+		CheckoutSessionID: &sessionID,
 	}
 	setTransactionAuditableProperties(trx)
 	return trx
