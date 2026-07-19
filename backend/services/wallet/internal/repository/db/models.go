@@ -5,11 +5,98 @@
 package db
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
+
+type TransactionStatus string
+
+const (
+	TransactionStatusPending   TransactionStatus = "pending"
+	TransactionStatusCompleted TransactionStatus = "completed"
+	TransactionStatusFailed    TransactionStatus = "failed"
+	TransactionStatusCancelled TransactionStatus = "cancelled"
+)
+
+func (e *TransactionStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransactionStatus(s)
+	case string:
+		*e = TransactionStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransactionStatus: %T", src)
+	}
+	return nil
+}
+
+type NullTransactionStatus struct {
+	TransactionStatus TransactionStatus
+	Valid             bool // Valid is true if TransactionStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransactionStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransactionStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransactionStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransactionStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TransactionStatus), nil
+}
+
+type TransactionType string
+
+const (
+	TransactionTypeTopup TransactionType = "topup"
+)
+
+func (e *TransactionType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransactionType(s)
+	case string:
+		*e = TransactionType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransactionType: %T", src)
+	}
+	return nil
+}
+
+type NullTransactionType struct {
+	TransactionType TransactionType
+	Valid           bool // Valid is true if TransactionType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransactionType) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransactionType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransactionType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransactionType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TransactionType), nil
+}
 
 type Customer struct {
 	ID               uuid.UUID
@@ -21,6 +108,23 @@ type Customer struct {
 	CreatedBy        uuid.UUID
 	UpdatedBy        uuid.UUID
 	DeletedBy        *uuid.UUID
+}
+
+type Transaction struct {
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              TransactionType
+	Status            TransactionStatus
+	IdempotencyKey    uuid.UUID
+	Amount            decimal.Decimal
+	Currency          string
+	CheckoutSessionID *string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	DeletedAt         *time.Time
+	CreatedBy         uuid.UUID
+	UpdatedBy         uuid.UUID
+	DeletedBy         *uuid.UUID
 }
 
 type Wallet struct {

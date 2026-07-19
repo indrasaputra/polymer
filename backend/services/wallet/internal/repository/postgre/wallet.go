@@ -42,13 +42,48 @@ func (w *Wallet) InsertWallet(ctx context.Context, wallet *entity.Wallet) (*enti
 
 	// if wallet exist, postgre returns not found, so we handle this by querying the wallet
 	if err == sdkpostgre.ErrNotFound {
-		res, err = w.getUserActiveWalletByUserIDAndCurrency(ctx, wallet.UserID, wallet.Currency)
+		var r *entity.Wallet
+		r, err = w.getUserActiveWalletByUserIDAndCurrency(ctx, wallet.UserID, wallet.Currency)
 		if err != nil {
 			return nil, err
 		}
+		return r, nil
 	}
 	if err != nil {
 		slog.ErrorContext(ctx, "[PostgreWallet-Insert] fail insert wallet", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBWalletToEntityWallet(res), nil
+}
+
+func (w *Wallet) getUserActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*entity.Wallet, error) {
+	res, err := w.queries.GetUserActiveWalletByUserIdAndCurrency(ctx, db.GetUserActiveWalletByUserIdAndCurrencyParams{
+		UserID:   userID,
+		Currency: currency,
+	})
+
+	if err == sdkpostgre.ErrNotFound {
+		return nil, entity.ErrEmptyWallet
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-GetUserActiveWalletByUserIdAndCurrency] internal error", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBWalletToEntityWallet(res), nil
+}
+
+// GetUserWalletByIDAndUserID gets an active wallet.
+func (w *Wallet) GetUserWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error) {
+	res, err := w.queries.GetUserWalletByIDAndUserID(ctx, db.GetUserWalletByIDAndUserIDParams{
+		ID:     id,
+		UserID: userID,
+	})
+
+	if err == sdkpostgre.ErrNotFound {
+		return nil, entity.ErrNilWallet
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-GetUserWalletByIDAndUserID] internal error", "error", err)
 		return nil, entity.ErrInternal
 	}
 	return convertDBWalletToEntityWallet(res), nil
@@ -101,20 +136,46 @@ func (w *Wallet) InsertCustomer(ctx context.Context, customer *entity.Customer) 
 	return convertDBCustomerToEntityCustomer(res), nil
 }
 
-func (w *Wallet) getUserActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*db.Wallet, error) {
-	res, err := w.queries.GetUserActiveWalletByUserIdAndCurrency(ctx, db.GetUserActiveWalletByUserIdAndCurrencyParams{
-		UserID:   userID,
-		Currency: currency,
-	})
-
-	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrEmptyWallet
+// InsertTransaction inserts a new transaction.
+func (w *Wallet) InsertTransaction(ctx context.Context, transaction *entity.Transaction) (*entity.Transaction, error) {
+	if transaction == nil {
+		return nil, entity.ErrNilTransaction
 	}
+
+	param := db.InsertTransactionParams{
+		ID:                transaction.ID,
+		UserID:            transaction.UserID,
+		Type:              db.TransactionType(transaction.Type),
+		IdempotencyKey:    transaction.IdempotencyKey,
+		Status:            db.TransactionStatus(transaction.Status),
+		Amount:            transaction.Amount,
+		Currency:          transaction.Currency,
+		CheckoutSessionID: transaction.CheckoutSessionID,
+		CreatedAt:         transaction.CreatedAt,
+		UpdatedAt:         transaction.UpdatedAt,
+		CreatedBy:         transaction.UserID,
+		UpdatedBy:         transaction.UserID,
+	}
+
+	trx, err := w.queries.InsertTransaction(ctx, param)
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-getWalletByUserIDAndCurrency] internal error", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-InsertTransaction] fail insert transaction", "error", err)
 		return nil, entity.ErrInternal
 	}
-	return res, nil
+	return convertDBTransactionToEntityTransaction(trx), nil
+}
+
+// GetPendingTransactionByIdempotencyKey gets a pending transaction.
+func (w *Wallet) GetPendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error) {
+	res, err := w.queries.GetPendingTransactionByIdempotencyKey(ctx, key)
+	if err == sdkpostgre.ErrNotFound {
+		return nil, entity.ErrNilTransaction
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-GetPendingTransactionByIdempotencyKey] fail get transaction", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBTransactionToEntityTransaction(res), nil
 }
 
 func convertDBWalletToEntityWallet(w *db.Wallet) *entity.Wallet {
@@ -136,7 +197,37 @@ func convertDBWalletToEntityWallet(w *db.Wallet) *entity.Wallet {
 
 func convertDBCustomerToEntityCustomer(c *db.Customer) *entity.Customer {
 	return &entity.Customer{
+		ID:               c.ID,
 		UserID:           c.UserID,
 		StripeCustomerID: c.StripeCustomerID,
+		Auditable: entity.Auditable{
+			CreatedAt: c.CreatedAt,
+			UpdatedAt: c.UpdatedAt,
+			DeletedAt: c.DeletedAt,
+			CreatedBy: c.CreatedBy,
+			UpdatedBy: c.UpdatedBy,
+			DeletedBy: c.DeletedBy,
+		},
+	}
+}
+
+func convertDBTransactionToEntityTransaction(t *db.Transaction) *entity.Transaction {
+	return &entity.Transaction{
+		ID:                t.ID,
+		UserID:            t.UserID,
+		Type:              entity.TransactionType(t.Type),
+		Status:            entity.TransactionStatus(t.Status),
+		IdempotencyKey:    t.IdempotencyKey,
+		Amount:            t.Amount,
+		Currency:          t.Currency,
+		CheckoutSessionID: t.CheckoutSessionID,
+		Auditable: entity.Auditable{
+			CreatedAt: t.CreatedAt,
+			UpdatedAt: t.UpdatedAt,
+			DeletedAt: t.DeletedAt,
+			CreatedBy: t.CreatedBy,
+			UpdatedBy: t.UpdatedBy,
+			DeletedBy: t.DeletedBy,
+		},
 	}
 }

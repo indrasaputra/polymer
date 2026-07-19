@@ -293,6 +293,154 @@ func TestWallet_GetCustomerByUserID(t *testing.T) {
 	})
 }
 
+func TestWallet_GetUserWalletByIDAndUserID(t *testing.T) {
+	querySelect := `SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
+					WHERE id = \$1 AND user_id = \$2 AND deleted_at IS NULL
+					LIMIT 1`
+
+	t.Run("wallet not found", func(t *testing.T) {
+		wallet := createTestWallet()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(wallet.ID, wallet.UserID).
+			WillReturnError(sdkpostgre.ErrNotFound)
+
+		res, err := st.pgWallet.GetUserWalletByIDAndUserID(testCtx, wallet.ID, wallet.UserID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrNilWallet, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("query returns error", func(t *testing.T) {
+		wallet := createTestWallet()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(wallet.ID, wallet.UserID).
+			WillReturnError(assert.AnError)
+
+		res, err := st.pgWallet.GetUserWalletByIDAndUserID(testCtx, wallet.ID, wallet.UserID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrInternal, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("success get wallet", func(t *testing.T) {
+		wallet := createTestWallet()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(wallet.ID, wallet.UserID).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "balance", "currency", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(wallet.ID, wallet.UserID, wallet.Balance, wallet.Currency, wallet.CreatedAt, wallet.UpdatedAt, wallet.DeletedAt, wallet.CreatedBy, wallet.UpdatedBy, wallet.DeletedBy))
+
+		res, err := st.pgWallet.GetUserWalletByIDAndUserID(testCtx, wallet.ID, wallet.UserID)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+}
+
+func TestWallet_InsertTransaction(t *testing.T) {
+	queryInsert := `INSERT INTO transactions \(id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, created_by, updated_by\)
+				VALUES \(\$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12\)
+				RETURNING *`
+
+	t.Run("nil transaction is prohibited", func(t *testing.T) {
+		st := createWalletSuite(t)
+
+		res, err := st.pgWallet.InsertTransaction(testCtx, nil)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrNilTransaction, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("insert transaction returns error", func(t *testing.T) {
+		trx := createTestTransaction()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryInsert).
+			WithArgs(trx.ID, trx.UserID, db.TransactionType(trx.Type), db.TransactionStatus(trx.Status), trx.IdempotencyKey, trx.Amount, trx.Currency, trx.CheckoutSessionID, trx.CreatedAt, trx.UpdatedAt, trx.CreatedBy, trx.UpdatedBy).
+			WillReturnError(assert.AnError)
+
+		res, err := st.pgWallet.InsertTransaction(testCtx, trx)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrInternal, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("success insert transaction", func(t *testing.T) {
+		trx := createTestTransaction()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryInsert).
+			WithArgs(trx.ID, trx.UserID, db.TransactionType(trx.Type), db.TransactionStatus(trx.Status), trx.IdempotencyKey, trx.Amount, trx.Currency, trx.CheckoutSessionID, trx.CreatedAt, trx.UpdatedAt, trx.CreatedBy, trx.UpdatedBy).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "type", "idempotency_key", "status", "amount", "currency", "checkout_session_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(trx.ID, trx.UserID, db.TransactionType(trx.Type), db.TransactionStatus(trx.Status), trx.IdempotencyKey, trx.Amount, trx.Currency, trx.CheckoutSessionID, trx.CreatedAt, trx.UpdatedAt, trx.DeletedAt, trx.CreatedBy, trx.UpdatedBy, trx.DeletedBy))
+
+		res, err := st.pgWallet.InsertTransaction(testCtx, trx)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+}
+
+func TestWallet_GetPendingTransactionByIdempotencyKey(t *testing.T) {
+	querySelect := `SELECT id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM transactions
+					WHERE idempotency_key = \$1 AND status = 'pending' AND deleted_at IS NULL
+					LIMIT 1`
+
+	t.Run("transaction not found", func(t *testing.T) {
+		trx := createTestTransaction()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(trx.IdempotencyKey).
+			WillReturnError(sdkpostgre.ErrNotFound)
+
+		res, err := st.pgWallet.GetPendingTransactionByIdempotencyKey(testCtx, trx.IdempotencyKey)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrNilTransaction, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("query returns error", func(t *testing.T) {
+		trx := createTestTransaction()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(trx.IdempotencyKey).
+			WillReturnError(assert.AnError)
+
+		res, err := st.pgWallet.GetPendingTransactionByIdempotencyKey(testCtx, trx.IdempotencyKey)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrInternal, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("success get pending transaction", func(t *testing.T) {
+		trx := createTestTransaction()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(trx.IdempotencyKey).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "type", "idempotency_key", "status", "amount", "currency", "checkout_session_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(trx.ID, trx.UserID, db.TransactionType(trx.Type), db.TransactionStatus(trx.Status), trx.IdempotencyKey, trx.Amount, trx.Currency, trx.CheckoutSessionID, trx.CreatedAt, trx.UpdatedAt, trx.DeletedAt, trx.CreatedBy, trx.UpdatedBy, trx.DeletedBy))
+
+		res, err := st.pgWallet.GetPendingTransactionByIdempotencyKey(testCtx, trx.IdempotencyKey)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+}
+
 func createTestWallet() *entity.Wallet {
 	userID := uuid.Must(uuid.NewV7())
 	return &entity.Wallet{
@@ -316,6 +464,27 @@ func createTestCustomer() *entity.Customer {
 		ID:               uuid.Must(uuid.NewV7()),
 		UserID:           userID,
 		StripeCustomerID: stripeID,
+		Auditable: entity.Auditable{
+			CreatedAt: time.Now().UTC(),
+			UpdatedAt: time.Now().UTC(),
+			CreatedBy: userID,
+			UpdatedBy: userID,
+		},
+	}
+}
+
+func createTestTransaction() *entity.Transaction {
+	userID := uuid.Must(uuid.NewV7())
+	sessionID := "cs_test_123"
+	return &entity.Transaction{
+		ID:                uuid.Must(uuid.NewV7()),
+		UserID:            userID,
+		Type:              entity.TransactionType("topup"),
+		Status:            entity.TransactionStatus("pending"),
+		IdempotencyKey:    uuid.Must(uuid.NewV7()),
+		Amount:            decimal.NewFromInt(100),
+		Currency:          "USD",
+		CheckoutSessionID: &sessionID,
 		Auditable: entity.Auditable{
 			CreatedAt: time.Now().UTC(),
 			UpdatedAt: time.Now().UTC(),

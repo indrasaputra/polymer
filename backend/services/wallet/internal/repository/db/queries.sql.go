@@ -36,6 +36,34 @@ func (q *Queries) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*C
 	return &i, err
 }
 
+const getPendingTransactionByIdempotencyKey = `-- name: GetPendingTransactionByIdempotencyKey :one
+SELECT id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM transactions
+WHERE idempotency_key = $1 AND status = 'pending' AND deleted_at IS NULL
+LIMIT 1
+`
+
+func (q *Queries) GetPendingTransactionByIdempotencyKey(ctx context.Context, idempotencyKey uuid.UUID) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, getPendingTransactionByIdempotencyKey, idempotencyKey)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Status,
+		&i.IdempotencyKey,
+		&i.Amount,
+		&i.Currency,
+		&i.CheckoutSessionID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
 const getUserActiveWalletByUserIdAndCurrency = `-- name: GetUserActiveWalletByUserIdAndCurrency :one
 SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
 WHERE user_id = $1 AND currency = $2 AND deleted_at IS NULL
@@ -49,6 +77,35 @@ type GetUserActiveWalletByUserIdAndCurrencyParams struct {
 
 func (q *Queries) GetUserActiveWalletByUserIdAndCurrency(ctx context.Context, arg GetUserActiveWalletByUserIdAndCurrencyParams) (*Wallet, error) {
 	row := q.db.QueryRow(ctx, getUserActiveWalletByUserIdAndCurrency, arg.UserID, arg.Currency)
+	var i Wallet
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Balance,
+		&i.Currency,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
+const getUserWalletByIDAndUserID = `-- name: GetUserWalletByIDAndUserID :one
+SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
+WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+LIMIT 1
+`
+
+type GetUserWalletByIDAndUserIDParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) GetUserWalletByIDAndUserID(ctx context.Context, arg GetUserWalletByIDAndUserIDParams) (*Wallet, error) {
+	row := q.db.QueryRow(ctx, getUserWalletByIDAndUserID, arg.ID, arg.UserID)
 	var i Wallet
 	err := row.Scan(
 		&i.ID,
@@ -97,6 +154,62 @@ func (q *Queries) InsertCustomer(ctx context.Context, arg InsertCustomerParams) 
 		&i.ID,
 		&i.UserID,
 		&i.StripeCustomerID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
+const insertTransaction = `-- name: InsertTransaction :one
+INSERT INTO transactions (id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, created_by, updated_by)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+RETURNING id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
+`
+
+type InsertTransactionParams struct {
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	Type              TransactionType
+	Status            TransactionStatus
+	IdempotencyKey    uuid.UUID
+	Amount            decimal.Decimal
+	Currency          string
+	CheckoutSessionID *string
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	CreatedBy         uuid.UUID
+	UpdatedBy         uuid.UUID
+}
+
+func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionParams) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, insertTransaction,
+		arg.ID,
+		arg.UserID,
+		arg.Type,
+		arg.Status,
+		arg.IdempotencyKey,
+		arg.Amount,
+		arg.Currency,
+		arg.CheckoutSessionID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.CreatedBy,
+		arg.UpdatedBy,
+	)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Status,
+		&i.IdempotencyKey,
+		&i.Amount,
+		&i.Currency,
+		&i.CheckoutSessionID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
