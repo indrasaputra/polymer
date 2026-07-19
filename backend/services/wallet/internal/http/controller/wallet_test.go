@@ -42,7 +42,8 @@ var (
 
 type WalletSuite struct {
 	walletController *controller.Wallet
-	walletService    *mockservice.MockCreateWallet
+	walletCreator    *mockservice.MockCreateWallet
+	walletTopup      *mockservice.MockTopupWallet
 }
 
 func TestNewWallet(t *testing.T) {
@@ -106,7 +107,7 @@ func TestWallet_Create(t *testing.T) {
 		(*c).Echo().Validator = validator.New()
 
 		st := createWalletSuite(t)
-		st.walletService.EXPECT().Create(c.Request().Context(), mock.MatchedBy(func(input *entity.CreateWalletInput) bool {
+		st.walletCreator.EXPECT().Create(c.Request().Context(), mock.MatchedBy(func(input *entity.CreateWalletInput) bool {
 			return input.UserID == testCurrentUser.ID && input.Currency == testCurrency
 		})).Return(nil, assert.AnError)
 
@@ -126,11 +127,136 @@ func TestWallet_Create(t *testing.T) {
 		(*c).Echo().Validator = validator.New()
 
 		st := createWalletSuite(t)
-		st.walletService.EXPECT().Create(c.Request().Context(), mock.MatchedBy(func(input *entity.CreateWalletInput) bool {
+		st.walletCreator.EXPECT().Create(c.Request().Context(), mock.MatchedBy(func(input *entity.CreateWalletInput) bool {
 			return input.UserID == testCurrentUser.ID && input.Currency == testCurrency
 		})).Return(testWallet, nil)
 
 		err := st.walletController.Create(c, testCurrentUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusCreated, rec.Code)
+	})
+}
+
+func TestWallet_Topup(t *testing.T) {
+	testWalletID := uuid.Must(uuid.NewV7())
+	testIdempotencyKey := uuid.Must(uuid.NewV7())
+
+	t.Run("binding header fail due to invalid idempotency key", func(t *testing.T) {
+		c, rec := echotest.ContextConfig{
+			Headers: map[string][]string{
+				echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				"x-idempotency-key":    {"not-a-uuid"},
+			},
+			JSONBody: []byte(`{"amount":"100","wallet_id":"` + testWalletID.String() + `"}`),
+		}.ToContextRecorder(t)
+
+		st := createWalletSuite(t)
+
+		err := st.walletController.Topup(c, testCurrentUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("binding body fail due to invalid json body", func(t *testing.T) {
+		c, rec := echotest.ContextConfig{
+			Headers: map[string][]string{
+				echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				"x-idempotency-key":    {testIdempotencyKey.String()},
+			},
+			JSONBody: []byte(`{"bad":"json"`),
+		}.ToContextRecorder(t)
+
+		st := createWalletSuite(t)
+
+		err := st.walletController.Topup(c, testCurrentUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("validation fail due to non-exist required field", func(t *testing.T) {
+		c, rec := echotest.ContextConfig{
+			Headers: map[string][]string{
+				echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				"x-idempotency-key":    {testIdempotencyKey.String()},
+			},
+			JSONBody: []byte(`{"good":"json"}`),
+		}.ToContextRecorder(t)
+		(*c).Echo().Validator = validator.New()
+
+		st := createWalletSuite(t)
+
+		err := st.walletController.Topup(c, testCurrentUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("amount is not a valid numeric string", func(t *testing.T) {
+		c, rec := echotest.ContextConfig{
+			Headers: map[string][]string{
+				echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				"x-idempotency-key":    {testIdempotencyKey.String()},
+			},
+			JSONBody: []byte(`{"amount":"abc","wallet_id":"` + testWalletID.String() + `"}`),
+		}.ToContextRecorder(t)
+		(*c).Echo().Validator = validator.New()
+
+		st := createWalletSuite(t)
+
+		err := st.walletController.Topup(c, testCurrentUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	})
+
+	t.Run("wallet service returns error", func(t *testing.T) {
+		c, rec := echotest.ContextConfig{
+			Headers: map[string][]string{
+				echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				"x-idempotency-key":    {testIdempotencyKey.String()},
+			},
+			JSONBody: []byte(`{"amount":"100","wallet_id":"` + testWalletID.String() + `"}`),
+		}.ToContextRecorder(t)
+		(*c).Echo().Validator = validator.New()
+
+		st := createWalletSuite(t)
+		amount, _ := decimal.NewFromString("100")
+		st.walletTopup.EXPECT().Topup(c.Request().Context(), mock.MatchedBy(func(input *entity.TopupWalletInput) bool {
+			return input.UserID == testCurrentUser.ID &&
+				input.WalletID == testWalletID &&
+				input.IdempotencyKey == testIdempotencyKey &&
+				input.Amount.Equal(amount)
+		})).Return(nil, assert.AnError)
+
+		err := st.walletController.Topup(c, testCurrentUser)
+
+		assert.NoError(t, err)
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	})
+
+	t.Run("success topup wallet", func(t *testing.T) {
+		c, rec := echotest.ContextConfig{
+			Headers: map[string][]string{
+				echo.HeaderContentType: {echo.MIMEApplicationJSON},
+				"x-idempotency-key":    {testIdempotencyKey.String()},
+			},
+			JSONBody: []byte(`{"amount":"100","wallet_id":"` + testWalletID.String() + `"}`),
+		}.ToContextRecorder(t)
+		(*c).Echo().Validator = validator.New()
+
+		st := createWalletSuite(t)
+		amount, _ := decimal.NewFromString("100")
+		st.walletTopup.EXPECT().Topup(c.Request().Context(), mock.MatchedBy(func(input *entity.TopupWalletInput) bool {
+			return input.UserID == testCurrentUser.ID &&
+				input.WalletID == testWalletID &&
+				input.IdempotencyKey == testIdempotencyKey &&
+				input.Amount.Equal(amount)
+		})).Return(&entity.TopupWalletOutput{CheckoutSessionURL: "https://checkout.example.com/session/123"}, nil)
+
+		err := st.walletController.Topup(c, testCurrentUser)
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, rec.Code)
@@ -144,6 +270,7 @@ func createWalletSuite(t *testing.T) *WalletSuite {
 	w := controller.NewWallet(c, tp)
 	return &WalletSuite{
 		walletController: w,
-		walletService:    c,
+		walletCreator:    c,
+		walletTopup:      tp,
 	}
 }
