@@ -17,6 +17,67 @@ services:
       - "4040:4040" # Pyroscope
     restart: on-failure
 
+  kafka:
+    <<: *default
+    image: apache/kafka:4.3.1
+    container_name: polymer-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:9093'      
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092,INTERNAL://kafka:29092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT' 
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL' 
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+    # Mandatory because other service needs Kafka to be healthy
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  kafka-init:
+    <<: *default
+    image: apache/kafka:4.3.1
+    container_name: polymer-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: []
+    command: >
+      /bin/sh -c "
+      echo 'Waiting for Kafka network readiness...' &&
+      until /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --list > /dev/null 2>&1; do sleep 1; done &&
+      echo 'Creating topics...' &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --create --if-not-exists --topic stripe-webhooks --partitions 4 --replication-factor 1 &&
+      echo '=== Verification: Active Clusters Topics ===' &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:29092 --list &&
+      echo '=== Initialization Finished Successfully ==='
+      "
+
+  kafka-ui:
+    <<: *default
+    image: tchiotludo/akhq:0.27.1
+    container_name: polymer-kafka-dashboard
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "3001:8080"
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            local-cluster:
+              properties:
+                bootstrap.servers: "kafka:29092"
+
 volumes:
   polymer:
 
