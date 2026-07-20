@@ -130,7 +130,7 @@ func TestStripeWebhookReceiver_Receive(t *testing.T) {
 	t.Run("construct event returns error", func(t *testing.T) {
 		st := createStripeWebhookReceiverSuite(t)
 		incoming := createTestStripeEvent()
-		st.constructor.EXPECT().ConstructEvent(incoming.Payload, incoming.Header, testStripeSecret).
+		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header, testStripeSecret).
 			Return(nil, assert.AnError)
 
 		err := st.receiver.Receive(testCtx, incoming)
@@ -143,7 +143,7 @@ func TestStripeWebhookReceiver_Receive(t *testing.T) {
 		st := createStripeWebhookReceiverSuite(t)
 		incoming := createTestStripeEvent()
 		se := createTestStripeGoEvent()
-		st.constructor.EXPECT().ConstructEvent(incoming.Payload, incoming.Header, testStripeSecret).
+		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header, testStripeSecret).
 			Return(se, nil)
 		st.producer.EXPECT().Produce(testCtx, mock.MatchedBy(func(event *entity.Event) bool {
 			return string(event.Key) == se.ID &&
@@ -161,7 +161,7 @@ func TestStripeWebhookReceiver_Receive(t *testing.T) {
 		st := createStripeWebhookReceiverSuite(t)
 		incoming := createTestStripeEvent()
 		se := createTestStripeGoEvent()
-		st.constructor.EXPECT().ConstructEvent(incoming.Payload, incoming.Header, testStripeSecret).
+		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header, testStripeSecret).
 			Return(se, nil)
 		st.producer.EXPECT().Produce(testCtx, mock.MatchedBy(func(event *entity.Event) bool {
 			return string(event.Key) == se.ID &&

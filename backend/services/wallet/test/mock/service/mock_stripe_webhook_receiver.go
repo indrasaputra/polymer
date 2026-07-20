@@ -7,10 +7,9 @@ package service
 import (
 	"context"
 
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stripe/stripe-go/v86"
-
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
 // NewMockReceiveStripeWebhook creates a new instance of MockReceiveStripeWebhook. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -209,8 +208,8 @@ func (_m *MockStripeEventConstructor) EXPECT() *MockStripeEventConstructor_Expec
 }
 
 // ConstructEvent provides a mock function for the type MockStripeEventConstructor
-func (_mock *MockStripeEventConstructor) ConstructEvent(payload []byte, header string, secret string) (*stripe.Event, error) {
-	ret := _mock.Called(payload, header, secret)
+func (_mock *MockStripeEventConstructor) ConstructEvent(ctx context.Context, payload []byte, header string, secret string) (*stripe.Event, error) {
+	ret := _mock.Called(ctx, payload, header, secret)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ConstructEvent")
@@ -218,18 +217,18 @@ func (_mock *MockStripeEventConstructor) ConstructEvent(payload []byte, header s
 
 	var r0 *stripe.Event
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func([]byte, string, string) (*stripe.Event, error)); ok {
-		return returnFunc(payload, header, secret)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []byte, string, string) (*stripe.Event, error)); ok {
+		return returnFunc(ctx, payload, header, secret)
 	}
-	if returnFunc, ok := ret.Get(0).(func([]byte, string, string) *stripe.Event); ok {
-		r0 = returnFunc(payload, header, secret)
+	if returnFunc, ok := ret.Get(0).(func(context.Context, []byte, string, string) *stripe.Event); ok {
+		r0 = returnFunc(ctx, payload, header, secret)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*stripe.Event)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func([]byte, string, string) error); ok {
-		r1 = returnFunc(payload, header, secret)
+	if returnFunc, ok := ret.Get(1).(func(context.Context, []byte, string, string) error); ok {
+		r1 = returnFunc(ctx, payload, header, secret)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -242,31 +241,37 @@ type MockStripeEventConstructor_ConstructEvent_Call struct {
 }
 
 // ConstructEvent is a helper method to define mock.On call
+//   - ctx context.Context
 //   - payload []byte
 //   - header string
 //   - secret string
-func (_e *MockStripeEventConstructor_Expecter) ConstructEvent(payload any, header any, secret any) *MockStripeEventConstructor_ConstructEvent_Call {
-	return &MockStripeEventConstructor_ConstructEvent_Call{Call: _e.mock.On("ConstructEvent", payload, header, secret)}
+func (_e *MockStripeEventConstructor_Expecter) ConstructEvent(ctx any, payload any, header any, secret any) *MockStripeEventConstructor_ConstructEvent_Call {
+	return &MockStripeEventConstructor_ConstructEvent_Call{Call: _e.mock.On("ConstructEvent", ctx, payload, header, secret)}
 }
 
-func (_c *MockStripeEventConstructor_ConstructEvent_Call) Run(run func(payload []byte, header string, secret string)) *MockStripeEventConstructor_ConstructEvent_Call {
+func (_c *MockStripeEventConstructor_ConstructEvent_Call) Run(run func(ctx context.Context, payload []byte, header string, secret string)) *MockStripeEventConstructor_ConstructEvent_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		var arg0 []byte
+		var arg0 context.Context
 		if args[0] != nil {
-			arg0 = args[0].([]byte)
+			arg0 = args[0].(context.Context)
 		}
-		var arg1 string
+		var arg1 []byte
 		if args[1] != nil {
-			arg1 = args[1].(string)
+			arg1 = args[1].([]byte)
 		}
 		var arg2 string
 		if args[2] != nil {
 			arg2 = args[2].(string)
 		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
 		run(
 			arg0,
 			arg1,
 			arg2,
+			arg3,
 		)
 	})
 	return _c
@@ -277,7 +282,7 @@ func (_c *MockStripeEventConstructor_ConstructEvent_Call) Return(event *stripe.E
 	return _c
 }
 
-func (_c *MockStripeEventConstructor_ConstructEvent_Call) RunAndReturn(run func(payload []byte, header string, secret string) (*stripe.Event, error)) *MockStripeEventConstructor_ConstructEvent_Call {
+func (_c *MockStripeEventConstructor_ConstructEvent_Call) RunAndReturn(run func(ctx context.Context, payload []byte, header string, secret string) (*stripe.Event, error)) *MockStripeEventConstructor_ConstructEvent_Call {
 	_c.Call.Return(run)
 	return _c
 }

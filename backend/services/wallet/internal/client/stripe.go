@@ -88,6 +88,17 @@ func (s *Stripe) CreateCheckoutSession(ctx context.Context, input *entity.Checko
 	return &entity.CheckoutSession{ID: session.ID, URL: session.URL}, nil
 }
 
+// ConstructEvent constructs an incoming payload to be an event.
+// Prior to constructing, it will validate the header and secret.
+func (s *Stripe) ConstructEvent(ctx context.Context, payload []byte, header string, secret string) (*stripe.Event, error) {
+	event, err := s.client.ConstructEvent(payload, header, secret)
+	if err != nil {
+		slog.ErrorContext(ctx, "[Stripe-CreateCheckoutSessionURL] fail create checkout session", "error", err)
+		return nil, entity.ErrInvalidStripeEvent
+	}
+	return &event, nil
+}
+
 func toSmallestUnitCurrency(amout decimal.Decimal, currencyCode string) int64 {
 	digit, ok := currency.GetDigits(currencyCode)
 	if !ok {

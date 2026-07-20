@@ -34,7 +34,7 @@ type StripeWebhookReceiver struct {
 // StripeEventConstructor defines interface to construct Stripe event.
 type StripeEventConstructor interface {
 	// ConstructEvent construct incoming payload to be a Stripe event.
-	ConstructEvent(payload []byte, header string, secret string) (*stripe.Event, error)
+	ConstructEvent(ctx context.Context, payload []byte, header string, secret string) (*stripe.Event, error)
 }
 
 // StripeWebhookReceiverConfig defines config for Stripe webhook receiver.
@@ -71,7 +71,7 @@ func NewStripeWebhookReceiver(c StripeWebhookReceiverConfig) (*StripeWebhookRece
 
 // Receive receives a webhook payload, validates the payload, and sends to message queue for further processing.
 func (s *StripeWebhookReceiver) Receive(ctx context.Context, incoming *entity.StripeEvent) error {
-	se, err := s.constructor.ConstructEvent(incoming.Payload, incoming.Header, s.secret)
+	se, err := s.constructor.ConstructEvent(ctx, incoming.Payload, incoming.Header, s.secret)
 	if err != nil {
 		slog.ErrorContext(ctx, "[StripeWebhookReceiver-Receive] incoming event is invalid", "error", err)
 		return entity.ErrInvalidStripeEvent
