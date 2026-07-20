@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	"github.com/twmb/franz-go/pkg/kgo"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
 // KafkaProducer is responsible for producing event to kafka.
@@ -25,7 +26,7 @@ func NewKafkaProducer(bs []string) (*KafkaProducer, error) {
 	return &KafkaProducer{client: c}, nil
 }
 
-// KafkaProducer produces event to kafka.
+// Produce produces event to kafka.
 // It is synchronous process.
 func (k *KafkaProducer) Produce(ctx context.Context, event *entity.Event) error {
 	record := &kgo.Record{

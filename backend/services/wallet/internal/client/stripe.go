@@ -22,13 +22,14 @@ var (
 
 // Stripe is responsible to connect with Stripe API.
 type Stripe struct {
-	client *stripe.Client
+	client        *stripe.Client
+	webhookSecret string
 }
 
 // NewStripe creates an instance of Stripe.
-func NewStripe(apiKey string) *Stripe {
+func NewStripe(apiKey string, secret string) *Stripe {
 	c := stripe.NewClient(apiKey)
-	return &Stripe{client: c}
+	return &Stripe{client: c, webhookSecret: secret}
 }
 
 // CreateCustomer creates a customer in client side.
@@ -90,10 +91,10 @@ func (s *Stripe) CreateCheckoutSession(ctx context.Context, input *entity.Checko
 
 // ConstructEvent constructs an incoming payload to be an event.
 // Prior to constructing, it will validate the header and secret.
-func (s *Stripe) ConstructEvent(ctx context.Context, payload []byte, header string, secret string) (*stripe.Event, error) {
-	event, err := s.client.ConstructEvent(payload, header, secret)
+func (s *Stripe) ConstructEvent(ctx context.Context, payload []byte, header string) (*stripe.Event, error) {
+	event, err := s.client.ConstructEvent(payload, header, s.webhookSecret)
 	if err != nil {
-		slog.ErrorContext(ctx, "[Stripe-CreateCheckoutSessionURL] fail create checkout session", "error", err)
+		slog.ErrorContext(ctx, "[Stripe-ConstructEvent] fail construct event", "error", err)
 		return nil, entity.ErrInvalidStripeEvent
 	}
 	return &event, nil

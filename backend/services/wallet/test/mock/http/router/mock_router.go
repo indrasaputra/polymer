@@ -37,8 +37,8 @@ func (_m *MockRouteRegistrar) EXPECT() *MockRouteRegistrar_Expecter {
 }
 
 // RegisterRoute provides a mock function for the type MockRouteRegistrar
-func (_mock *MockRouteRegistrar) RegisterRoute(g *echo.Group) {
-	_mock.Called(g)
+func (_mock *MockRouteRegistrar) RegisterRoute(g *echo.Group, jwtmid echo.MiddlewareFunc) {
+	_mock.Called(g, jwtmid)
 	return
 }
 
@@ -49,18 +49,24 @@ type MockRouteRegistrar_RegisterRoute_Call struct {
 
 // RegisterRoute is a helper method to define mock.On call
 //   - g *echo.Group
-func (_e *MockRouteRegistrar_Expecter) RegisterRoute(g any) *MockRouteRegistrar_RegisterRoute_Call {
-	return &MockRouteRegistrar_RegisterRoute_Call{Call: _e.mock.On("RegisterRoute", g)}
+//   - jwtmid echo.MiddlewareFunc
+func (_e *MockRouteRegistrar_Expecter) RegisterRoute(g any, jwtmid any) *MockRouteRegistrar_RegisterRoute_Call {
+	return &MockRouteRegistrar_RegisterRoute_Call{Call: _e.mock.On("RegisterRoute", g, jwtmid)}
 }
 
-func (_c *MockRouteRegistrar_RegisterRoute_Call) Run(run func(g *echo.Group)) *MockRouteRegistrar_RegisterRoute_Call {
+func (_c *MockRouteRegistrar_RegisterRoute_Call) Run(run func(g *echo.Group, jwtmid echo.MiddlewareFunc)) *MockRouteRegistrar_RegisterRoute_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 *echo.Group
 		if args[0] != nil {
 			arg0 = args[0].(*echo.Group)
 		}
+		var arg1 echo.MiddlewareFunc
+		if args[1] != nil {
+			arg1 = args[1].(echo.MiddlewareFunc)
+		}
 		run(
 			arg0,
+			arg1,
 		)
 	})
 	return _c
@@ -71,7 +77,7 @@ func (_c *MockRouteRegistrar_RegisterRoute_Call) Return() *MockRouteRegistrar_Re
 	return _c
 }
 
-func (_c *MockRouteRegistrar_RegisterRoute_Call) RunAndReturn(run func(g *echo.Group)) *MockRouteRegistrar_RegisterRoute_Call {
+func (_c *MockRouteRegistrar_RegisterRoute_Call) RunAndReturn(run func(g *echo.Group, jwtmid echo.MiddlewareFunc)) *MockRouteRegistrar_RegisterRoute_Call {
 	_c.Run(run)
 	return _c
 }

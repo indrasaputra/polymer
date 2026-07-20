@@ -27,14 +27,13 @@ type Producer interface {
 type StripeWebhookReceiver struct {
 	producer    Producer
 	constructor StripeEventConstructor
-	secret      string
 	topic       string
 }
 
 // StripeEventConstructor defines interface to construct Stripe event.
 type StripeEventConstructor interface {
 	// ConstructEvent construct incoming payload to be a Stripe event.
-	ConstructEvent(ctx context.Context, payload []byte, header string, secret string) (*stripe.Event, error)
+	ConstructEvent(ctx context.Context, payload []byte, header string) (*stripe.Event, error)
 }
 
 // StripeWebhookReceiverConfig defines config for Stripe webhook receiver.
@@ -42,7 +41,6 @@ type StripeEventConstructor interface {
 type StripeWebhookReceiverConfig struct {
 	Producer         Producer
 	EventConstructor StripeEventConstructor
-	Secret           string
 	Topic            string
 }
 
@@ -54,9 +52,6 @@ func NewStripeWebhookReceiver(c StripeWebhookReceiverConfig) (*StripeWebhookRece
 	if c.EventConstructor == nil {
 		return nil, errors.New("event constructor is required")
 	}
-	if strings.TrimSpace(c.Secret) == "" {
-		return nil, errors.New("secret is required")
-	}
 	if strings.TrimSpace(c.Topic) == "" {
 		return nil, errors.New("topic is required")
 	}
@@ -64,14 +59,13 @@ func NewStripeWebhookReceiver(c StripeWebhookReceiverConfig) (*StripeWebhookRece
 	return &StripeWebhookReceiver{
 		producer:    c.Producer,
 		constructor: c.EventConstructor,
-		secret:      strings.TrimSpace(c.Secret),
 		topic:       strings.TrimSpace(c.Topic),
 	}, nil
 }
 
 // Receive receives a webhook payload, validates the payload, and sends to message queue for further processing.
 func (s *StripeWebhookReceiver) Receive(ctx context.Context, incoming *entity.StripeEvent) error {
-	se, err := s.constructor.ConstructEvent(ctx, incoming.Payload, incoming.Header, s.secret)
+	se, err := s.constructor.ConstructEvent(ctx, incoming.Payload, incoming.Header)
 	if err != nil {
 		slog.ErrorContext(ctx, "[StripeWebhookReceiver-Receive] incoming event is invalid", "error", err)
 		return entity.ErrInvalidStripeEvent

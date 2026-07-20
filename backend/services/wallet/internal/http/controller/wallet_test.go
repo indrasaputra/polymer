@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/echotest"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -59,7 +60,7 @@ func TestWallet_RegisterRoute(t *testing.T) {
 		st := createWalletSuite(t)
 		e := echo.New()
 
-		assert.NotPanics(t, func() { st.walletController.RegisterRoute(e.Group("/api/v1")) })
+		assert.NotPanics(t, func() { st.walletController.RegisterRoute(e.Group("/api/v1"), middleware.RequestID()) })
 	})
 }
 

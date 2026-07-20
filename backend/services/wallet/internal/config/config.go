@@ -15,13 +15,14 @@ import (
 type Config struct {
 	Tracer                   sdktrace.Config
 	Metric                   sdkmetric.Config
+	Stripe                   Stripe
 	ServiceName              string `env:"SERVICE_NAME,default=wallet"`
 	Env                      string `env:"ENV,default=development"`
 	Port                     string `env:"PORT,default=9002"`
 	TopupSuccessURL          string `env:"TOPUP_SUCCESS_URL,default=http://localhost:9000"`
 	Supabase                 Supabase
-	Stripe                   Stripe
 	Postgre                  sdkpostgre.Config
+	Kafka                    Kafka
 	GlobalTimeoutInSeconds   int `env:"GLOBAL_TIMEOUT_IN_SECONDS,default=60"`
 	GracefulTimeoutInSeconds int `env:"GRACEFUL_TIMEOUT_IN_SECONDS,default=5"`
 }
@@ -33,7 +34,14 @@ type Supabase struct {
 
 // Stripe holds config for Stripe.
 type Stripe struct {
-	APIKey string `env:"STRIPE_API_KEY,required"`
+	APIKey        string `env:"STRIPE_API_KEY,required"`
+	WebhookSecret string `env:"STRIPE_WEBHOOK_SECRET,required"`
+	WebhookTopic  string `env:"STRIPE_WEBHOOK_TOPIC,default=stripe-webhooks"`
+}
+
+// Kafka holds config for Kafka.
+type Kafka struct {
+	Brokers []string `env:"KAFKA_BROKERS,default=localhost:9092"`
 }
 
 // New creates an instance of Config.

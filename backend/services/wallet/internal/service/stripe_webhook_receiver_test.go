@@ -13,7 +13,6 @@ import (
 )
 
 var (
-	testStripeSecret  = "secret"
 	testStripeTopic   = "wallet.stripe.events"
 	testStripeHeader  = "t=123,v1=abcdef"
 	testStripePayload = []byte(`{"id":"evt_test_123","type":"checkout.session.completed"}`)
@@ -33,7 +32,6 @@ func TestNewStripeWebhookReceiver(t *testing.T) {
 		r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
 			Producer:         nil,
 			EventConstructor: st.constructor,
-			Secret:           testStripeSecret,
 			Topic:            testStripeTopic,
 		})
 
@@ -47,35 +45,6 @@ func TestNewStripeWebhookReceiver(t *testing.T) {
 		r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
 			Producer:         st.producer,
 			EventConstructor: nil,
-			Secret:           testStripeSecret,
-			Topic:            testStripeTopic,
-		})
-
-		assert.Error(t, err)
-		assert.Nil(t, r)
-	})
-
-	t.Run("secret is required", func(t *testing.T) {
-		st := createStripeWebhookReceiverSuite(t)
-
-		r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
-			Producer:         st.producer,
-			EventConstructor: st.constructor,
-			Secret:           "",
-			Topic:            testStripeTopic,
-		})
-
-		assert.Error(t, err)
-		assert.Nil(t, r)
-	})
-
-	t.Run("secret is blank spaces", func(t *testing.T) {
-		st := createStripeWebhookReceiverSuite(t)
-
-		r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
-			Producer:         st.producer,
-			EventConstructor: st.constructor,
-			Secret:           "   ",
 			Topic:            testStripeTopic,
 		})
 
@@ -89,7 +58,6 @@ func TestNewStripeWebhookReceiver(t *testing.T) {
 		r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
 			Producer:         st.producer,
 			EventConstructor: st.constructor,
-			Secret:           testStripeSecret,
 			Topic:            "",
 		})
 
@@ -103,7 +71,6 @@ func TestNewStripeWebhookReceiver(t *testing.T) {
 		r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
 			Producer:         st.producer,
 			EventConstructor: st.constructor,
-			Secret:           testStripeSecret,
 			Topic:            "   ",
 		})
 
@@ -117,7 +84,6 @@ func TestNewStripeWebhookReceiver(t *testing.T) {
 		r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
 			Producer:         st.producer,
 			EventConstructor: st.constructor,
-			Secret:           testStripeSecret,
 			Topic:            testStripeTopic,
 		})
 
@@ -130,7 +96,7 @@ func TestStripeWebhookReceiver_Receive(t *testing.T) {
 	t.Run("construct event returns error", func(t *testing.T) {
 		st := createStripeWebhookReceiverSuite(t)
 		incoming := createTestStripeEvent()
-		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header, testStripeSecret).
+		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header).
 			Return(nil, assert.AnError)
 
 		err := st.receiver.Receive(testCtx, incoming)
@@ -143,7 +109,7 @@ func TestStripeWebhookReceiver_Receive(t *testing.T) {
 		st := createStripeWebhookReceiverSuite(t)
 		incoming := createTestStripeEvent()
 		se := createTestStripeGoEvent()
-		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header, testStripeSecret).
+		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header).
 			Return(se, nil)
 		st.producer.EXPECT().Produce(testCtx, mock.MatchedBy(func(event *entity.Event) bool {
 			return string(event.Key) == se.ID &&
@@ -161,7 +127,7 @@ func TestStripeWebhookReceiver_Receive(t *testing.T) {
 		st := createStripeWebhookReceiverSuite(t)
 		incoming := createTestStripeEvent()
 		se := createTestStripeGoEvent()
-		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header, testStripeSecret).
+		st.constructor.EXPECT().ConstructEvent(testCtx, incoming.Payload, incoming.Header).
 			Return(se, nil)
 		st.producer.EXPECT().Produce(testCtx, mock.MatchedBy(func(event *entity.Event) bool {
 			return string(event.Key) == se.ID &&
@@ -181,7 +147,6 @@ func createStripeWebhookReceiverSuite(t *testing.T) *StripeWebhookReceiverSuite 
 	r, err := service.NewStripeWebhookReceiver(service.StripeWebhookReceiverConfig{
 		Producer:         p,
 		EventConstructor: c,
-		Secret:           testStripeSecret,
 		Topic:            testStripeTopic,
 	})
 	assert.NoError(t, err)

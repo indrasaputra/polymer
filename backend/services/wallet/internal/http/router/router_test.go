@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -15,8 +16,8 @@ func TestRegisterAPIV1(t *testing.T) {
 	t.Run("success register routes", func(t *testing.T) {
 		e := echo.New()
 		r := mockrouter.NewMockRouteRegistrar(t)
-		r.EXPECT().RegisterRoute(mock.Anything).Return()
+		r.EXPECT().RegisterRoute(mock.Anything, mock.Anything).Return()
 
-		assert.NotPanics(t, func() { router.RegisterAPIV1(e, r) })
+		assert.NotPanics(t, func() { router.RegisterAPIV1(e, middleware.RequestID(), r) })
 	})
 }
