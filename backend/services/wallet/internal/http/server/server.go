@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	envProduction = "production"
+	envDevelopment = "development"
 )
 
 // Server holds server data.
@@ -35,7 +35,7 @@ func New(cfg *config.Config, logger *slog.Logger, traceProvider *sdktrace.Provid
 
 	e.Validator = validator.New()
 
-	if cfg.Env == envProduction {
+	if cfg.Env != envDevelopment {
 		e.Use(middleware.Recover())
 	}
 	e.Use(middleware.Secure())
