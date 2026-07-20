@@ -37,6 +37,7 @@ func (k *KafkaProducer) Produce(ctx context.Context, event *entity.Event) error 
 	res := k.client.ProduceSync(ctx, record)
 	if err := res.FirstErr(); err != nil {
 		slog.ErrorContext(ctx, "[Producer-Produce] fail produce event", "error", err)
+		return err
 	}
 	return nil
 }
