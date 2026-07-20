@@ -4,6 +4,7 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/client"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/controller"
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/messaging"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/repository/db"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/repository/postgre"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/service"
@@ -13,22 +14,47 @@ import (
 
 // Dependency holds any dependency to build full use cases.
 type Dependency struct {
-	Config    *config.Config
-	TxManager uow.TxManager
-	Queries   *db.Queries
+	Config       *config.Config
+	TxManager    uow.TxManager
+	Queries      *db.Queries
+	StripeClient *client.Stripe
 }
 
 // BuildWalletController builds wallet controller including all of its dependencies.
 func BuildWalletController(dep *Dependency) *controller.Wallet {
-	r := postgre.NewWallet(dep.Queries)
-	s := client.NewStripe(dep.Config.Stripe.APIKey)
-	c := service.NewWalletCreator(dep.TxManager, r, s)
-	t := service.NewWalletTopup(r, s, dep.Config.TopupSuccessURL)
-	return controller.NewWallet(c, t)
+	pg := postgre.NewWallet(dep.Queries)
+	creator := service.NewWalletCreator(dep.TxManager, pg, dep.StripeClient)
+	topup := service.NewWalletTopup(pg, dep.StripeClient, dep.Config.TopupSuccessURL)
+	return controller.NewWallet(creator, topup)
+}
+
+// BuildWebhookController builds webhook controller including all of its dependencies.
+func BuildWebhookController(dep *Dependency) (*controller.Webhook, error) {
+	pr, err := messaging.NewKafkaProducer(dep.Config.Kafka.Brokers)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := service.StripeWebhookReceiverConfig{
+		Producer:         pr,
+		EventConstructor: dep.StripeClient,
+		Topic:            dep.Config.Stripe.WebhookTopic,
+	}
+	receiver, err := service.NewStripeWebhookReceiver(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return controller.NewWebhook(receiver), nil
 }
 
 // BuildQueries builds sqlc queries.
 func BuildQueries(tr uow.Tr, getter uow.TxGetter) *db.Queries {
 	tx := sdkpostgre.NewTxDB(tr, getter)
 	return db.New(tx)
+}
+
+// BuildStripeClient builds Stripe client.
+func BuildStripeClient(cfg *config.Config) *client.Stripe {
+	return client.NewStripe(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret)
 }

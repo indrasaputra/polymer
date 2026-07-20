@@ -10,6 +10,7 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/router"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/server"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/database/postgre"
+	wmid "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/http/middleware"
 	sdklog "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/log"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/metric"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
@@ -36,12 +37,15 @@ func main() {
 	txm, err := uow.NewTxManager(pool)
 	raiseErrorIfAny(err)
 
+	stripeClient := builder.BuildStripeClient(cfg)
+
 	queries := builder.BuildQueries(pool, uow.NewTxGetter())
 
 	dep := &builder.Dependency{
-		Config:    cfg,
-		TxManager: txm,
-		Queries:   queries,
+		Config:       cfg,
+		TxManager:    txm,
+		Queries:      queries,
+		StripeClient: stripeClient,
 	}
 
 	srv, err := server.New(cfg, logger, traceProvider, metricProvider)
@@ -62,8 +66,13 @@ func main() {
 
 func registerRouterForAPIV1(srv *server.Server, dep *builder.Dependency) {
 	walletController := builder.BuildWalletController(dep)
+	webhookController, err := builder.BuildWebhookController(dep)
+	raiseErrorIfAny(err)
 
-	router.RegisterAPIV1(srv.Echo, walletController)
+	jwtmid, err := wmid.NewJwtMiddleware(dep.Config)
+	raiseErrorIfAny(err)
+
+	router.RegisterAPIV1(srv.Echo, jwtmid, walletController, webhookController)
 }
 
 func raiseErrorIfAny(err error) {

@@ -23,6 +23,22 @@ func TestBuildWalletController(t *testing.T) {
 	})
 }
 
+func TestBuildWebhookController(t *testing.T) {
+	t.Run("fail create webhook controller due to insufficient config", func(t *testing.T) {
+		dep := &builder.Dependency{
+			Config: &config.Config{
+				Kafka:  config.Kafka{Brokers: []string{"localhost:9092"}},
+				Stripe: config.Stripe{},
+			},
+		}
+
+		handler, err := builder.BuildWebhookController(dep)
+
+		assert.Error(t, err)
+		assert.Nil(t, handler)
+	})
+}
+
 func TestBuildQueries(t *testing.T) {
 	t.Run("success create queries", func(t *testing.T) {
 		pool, err := pgxmock.NewPool()
@@ -34,5 +50,17 @@ func TestBuildQueries(t *testing.T) {
 		queries := builder.BuildQueries(pool, g)
 
 		assert.NotNil(t, queries)
+	})
+}
+
+func TestBuildStripeClient(t *testing.T) {
+	t.Run("error create stripe client", func(t *testing.T) {
+		cfg := &config.Config{
+			Stripe: config.Stripe{},
+		}
+
+		client := builder.BuildStripeClient(cfg)
+
+		assert.NotNil(t, client)
 	})
 }

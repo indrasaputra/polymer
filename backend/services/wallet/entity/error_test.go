@@ -115,3 +115,10 @@ func TestErrEmptyTopup(t *testing.T) {
 		assert.Equal(t, "Empty topup", entity.ErrEmptyTopup.Error())
 	})
 }
+
+func TestErrInvalidStripeEvent(t *testing.T) {
+	t.Run("invalid stripe event error returns 400 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidStripeEvent.Code)
+		assert.Equal(t, "Invalid Stripe event", entity.ErrInvalidStripeEvent.Error())
+	})
+}

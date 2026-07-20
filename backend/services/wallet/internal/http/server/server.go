@@ -15,9 +15,12 @@ import (
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/validator"
-	wmid "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/http/middleware"
 	sdkmetric "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/metric"
 	sdktrace "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/trace"
+)
+
+const (
+	envDevelopment = "development"
 )
 
 // Server holds server data.
@@ -32,7 +35,9 @@ func New(cfg *config.Config, logger *slog.Logger, traceProvider *sdktrace.Provid
 
 	e.Validator = validator.New()
 
-	e.Use(middleware.Recover())
+	if cfg.Env != envDevelopment {
+		e.Use(middleware.Recover())
+	}
 	e.Use(middleware.Secure())
 	e.Use(middleware.ContextTimeout(time.Duration(cfg.GlobalTimeoutInSeconds) * time.Second))
 	e.Use(middleware.RequestID())
@@ -78,12 +83,6 @@ func New(cfg *config.Config, logger *slog.Logger, traceProvider *sdktrace.Provid
 			return nil
 		},
 	}))
-
-	jwtmid, err := wmid.NewJwtMiddleware(cfg)
-	if err != nil {
-		return nil, err
-	}
-	e.Use(jwtmid)
 
 	return &Server{Echo: e, Port: cfg.Port}, nil
 }

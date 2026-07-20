@@ -29,9 +29,10 @@ func TestNew(t *testing.T) {
 
 	t.Run("success load config via lookupper", func(t *testing.T) {
 		lookuper := envconfig.MapLookuper(map[string]string{
-			"SUPABASE_JWKS_URL": "url",
-			"POSTGRE_URL":       "url",
-			"STRIPE_API_KEY":    "key",
+			"SUPABASE_JWKS_URL":     "url",
+			"POSTGRE_URL":           "url",
+			"STRIPE_API_KEY":        "key",
+			"STRIPE_WEBHOOK_SECRET": "secret",
 		})
 
 		cfg := config.New(testCtx, lookuper, "")

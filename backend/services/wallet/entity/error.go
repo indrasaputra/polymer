@@ -27,6 +27,9 @@ var (
 	// ErrEmptyTopup occurs when topup is empty.
 	ErrEmptyTopup = NewWalletError(http.StatusBadRequest, "Empty topup")
 
+	// ErrInvalidStripeEvent occurs when Stripe event is invalid.
+	ErrInvalidStripeEvent = NewWalletError(http.StatusBadRequest, "Invalid Stripe event")
+
 	// ErrBadRequest occurs when request is not as expected.
 	ErrBadRequest = NewWalletError(http.StatusBadRequest, "Bad request in body or param")
 

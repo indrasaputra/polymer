@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -25,11 +24,11 @@ func NewWallet(c service.CreateWallet, t service.TopupWallet) *Wallet {
 }
 
 // RegisterRoute registers all routes in wallet controller.
-func (w *Wallet) RegisterRoute(g *echo.Group) {
+func (w *Wallet) RegisterRoute(g *echo.Group, jwtmid echo.MiddlewareFunc) {
 	wg := g.Group("/wallets")
 
-	wg.POST("", middleware.RequireUser(w.Create))
-	wg.POST("/topup", middleware.RequireUser(w.Topup))
+	wg.POST("", middleware.RequireUser(w.Create), jwtmid)
+	wg.POST("/topup", middleware.RequireUser(w.Topup), jwtmid)
 }
 
 // Create creates a new wallet with idempotency in mind.
@@ -40,7 +39,6 @@ func (w *Wallet) Create(c *echo.Context, currentUser *entity.CurrentUser) error 
 	}
 
 	if err := c.Validate(request); err != nil {
-		log.Println(err)
 		return dto.SendResponse(c, nil, entity.ErrEmptyWallet, 0)
 	}
 
@@ -61,7 +59,6 @@ func (w *Wallet) Topup(c *echo.Context, currentUser *entity.CurrentUser) error {
 	}
 
 	if err := c.Validate(request); err != nil {
-		log.Println(err)
 		return dto.SendResponse(c, nil, entity.ErrEmptyTopup, 0)
 	}
 
