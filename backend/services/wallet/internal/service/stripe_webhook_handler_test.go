@@ -20,9 +20,10 @@ var (
 )
 
 type StripeWebhookHandlerSuite struct {
-	handler     *service.StripeWebhookHandler
-	producer    *mockservice.MockProducer
-	constructor *mockservice.MockStripeEventConstructor
+	handler      *service.StripeWebhookHandler
+	producer     *mockservice.MockProducer
+	constructor  *mockservice.MockStripeEventConstructor
+	eventHandler *mockservice.MockHandleStripeEvent
 }
 
 func TestNewStripeWebhookHandler(t *testing.T) {
@@ -33,6 +34,7 @@ func TestNewStripeWebhookHandler(t *testing.T) {
 			Producer:         nil,
 			EventConstructor: st.constructor,
 			Topic:            testStripeTopic,
+			EventHandler:     st.eventHandler,
 		})
 
 		assert.Error(t, err)
@@ -46,6 +48,21 @@ func TestNewStripeWebhookHandler(t *testing.T) {
 			Producer:         st.producer,
 			EventConstructor: nil,
 			Topic:            testStripeTopic,
+			EventHandler:     st.eventHandler,
+		})
+
+		assert.Error(t, err)
+		assert.Nil(t, r)
+	})
+
+	t.Run("event handler is required", func(t *testing.T) {
+		st := createStripeWebhookHandlerSuite(t)
+
+		r, err := service.NewStripeWebhookHandler(service.StripeWebhookHandlerConfig{
+			Producer:         st.producer,
+			EventConstructor: st.constructor,
+			Topic:            testStripeTopic,
+			EventHandler:     nil,
 		})
 
 		assert.Error(t, err)
@@ -59,6 +76,7 @@ func TestNewStripeWebhookHandler(t *testing.T) {
 			Producer:         st.producer,
 			EventConstructor: st.constructor,
 			Topic:            "",
+			EventHandler:     st.eventHandler,
 		})
 
 		assert.Error(t, err)
@@ -85,6 +103,7 @@ func TestNewStripeWebhookHandler(t *testing.T) {
 			Producer:         st.producer,
 			EventConstructor: st.constructor,
 			Topic:            testStripeTopic,
+			EventHandler:     st.eventHandler,
 		})
 
 		assert.NoError(t, err)
@@ -144,17 +163,20 @@ func TestStripeWebhookHandler_Receive(t *testing.T) {
 func createStripeWebhookHandlerSuite(t *testing.T) *StripeWebhookHandlerSuite {
 	p := mockservice.NewMockProducer(t)
 	c := mockservice.NewMockStripeEventConstructor(t)
+	e := mockservice.NewMockHandleStripeEvent(t)
 	r, err := service.NewStripeWebhookHandler(service.StripeWebhookHandlerConfig{
 		Producer:         p,
 		EventConstructor: c,
 		Topic:            testStripeTopic,
+		EventHandler:     e,
 	})
 	assert.NoError(t, err)
 
 	return &StripeWebhookHandlerSuite{
-		handler:     r,
-		producer:    p,
-		constructor: c,
+		handler:      r,
+		producer:     p,
+		constructor:  c,
+		eventHandler: e,
 	}
 }
 
