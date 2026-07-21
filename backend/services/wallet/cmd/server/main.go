@@ -3,7 +3,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log/slog"
+	"sync"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/builder"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
@@ -38,7 +40,6 @@ func main() {
 	raiseErrorIfAny(err)
 
 	stripeClient := builder.BuildStripeClient(cfg)
-
 	queries := builder.BuildQueries(pool, uow.NewTxGetter())
 
 	dep := &builder.Dependency{
@@ -60,8 +61,34 @@ func main() {
 		stop()
 	}()
 
-	err = srv.StartWithGracefulStop(ctx, cfg)
+	err = runAll(ctx, stop,
+		func(ctx context.Context) error { return runServer(ctx, srv, cfg) },
+	)
 	raiseErrorIfAny(err)
+}
+
+func runServer(ctx context.Context, srv *server.Server, cfg *config.Config) error {
+	slog.Info("starting http server")
+	return srv.StartWithGracefulStop(ctx, cfg)
+}
+
+func runAll(ctx context.Context, stop context.CancelFunc, fns ...func(context.Context) error) error {
+	var wg sync.WaitGroup
+	errs := make([]error, len(fns))
+
+	for i, fn := range fns {
+		wg.Add(1)
+		go func(i int, fn func(context.Context) error) {
+			defer wg.Done()
+			if err := fn(ctx); err != nil && !errors.Is(err, context.Canceled) {
+				errs[i] = err
+				stop()
+			}
+		}(i, fn)
+	}
+
+	wg.Wait()
+	return errors.Join(errs...)
 }
 
 func registerRouterForAPIV1(srv *server.Server, dep *builder.Dependency) {
