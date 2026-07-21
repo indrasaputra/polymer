@@ -63,14 +63,14 @@ func TestBuildStripeEventConsumer(t *testing.T) {
 					StripeWebhookConsumerGroupID: "wallet-consumer-group",
 				},
 				Stripe: config.Stripe{
-					APIKey:        "sk_test_dummy",
-					WebhookSecret: "whsec_dummy",
+					APIKey:        "key",
+					WebhookSecret: "secret",
 				},
 			},
 			StripeClient: builder.BuildStripeClient(&config.Config{
 				Stripe: config.Stripe{
-					APIKey:        "sk_test_dummy",
-					WebhookSecret: "whsec_dummy",
+					APIKey:        "key",
+					WebhookSecret: "secret",
 				},
 			}),
 		}
