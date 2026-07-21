@@ -441,6 +441,56 @@ func TestWallet_GetPendingTransactionByIdempotencyKey(t *testing.T) {
 	})
 }
 
+func TestWallet_UpdatePendingTransactionByCheckoutSessionIDToCompleted(t *testing.T) {
+	queryUpdate := `UPDATE transactions
+					SET status = 'completed', updated_at = \$1, updated_by = \$2
+					WHERE checkout_session_id = \$3 AND status = 'pending' AND deleted_at IS NULL
+					RETURNING id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by`
+
+	t.Run("transaction not found", func(t *testing.T) {
+		sessionID := "cs_test_123"
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryUpdate).
+			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), &sessionID).
+			WillReturnError(sdkpostgre.ErrNotFound)
+
+		err := st.pgWallet.UpdatePendingTransactionByCheckoutSessionIDToCompleted(testCtx, sessionID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrNilTransaction, err)
+	})
+
+	t.Run("query returns error", func(t *testing.T) {
+		sessionID := "cs_test_123"
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryUpdate).
+			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), &sessionID).
+			WillReturnError(assert.AnError)
+
+		err := st.pgWallet.UpdatePendingTransactionByCheckoutSessionIDToCompleted(testCtx, sessionID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrInternal, err)
+	})
+
+	t.Run("success update transaction to completed", func(t *testing.T) {
+		sessionID := "cs_test_123"
+		trx := createTestTransaction()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryUpdate).
+			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), &sessionID).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "type", "idempotency_key", "status", "amount", "currency", "checkout_session_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(trx.ID, trx.UserID, db.TransactionType(trx.Type), db.TransactionStatus(trx.Status), trx.IdempotencyKey, trx.Amount, trx.Currency, trx.CheckoutSessionID, trx.CreatedAt, trx.UpdatedAt, trx.DeletedAt, trx.CreatedBy, trx.UpdatedBy, trx.DeletedBy))
+
+		err := st.pgWallet.UpdatePendingTransactionByCheckoutSessionIDToCompleted(testCtx, sessionID)
+
+		assert.NoError(t, err)
+	})
+}
+
 func createTestWallet() *entity.Wallet {
 	userID := uuid.Must(uuid.NewV7())
 	return &entity.Wallet{

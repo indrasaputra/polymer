@@ -15,15 +15,20 @@ type KafkaProducer struct {
 	client *kgo.Client
 }
 
-// NewKafkaProducer creates an instance of Producer.
+// NewKafkaProducer creates an instance of KafkaProducer.
 func NewKafkaProducer(bs []string) (*KafkaProducer, error) {
 	c, err := kgo.NewClient(
 		kgo.SeedBrokers(bs...),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("fail instantiate kafka client: %v", err)
+		return nil, fmt.Errorf("fail instantiate kafka producer client: %v", err)
 	}
 	return &KafkaProducer{client: c}, nil
+}
+
+// Close closes kafka's client.
+func (k *KafkaProducer) Close() {
+	k.client.Close()
 }
 
 // Produce produces event to kafka.
@@ -40,4 +45,68 @@ func (k *KafkaProducer) Produce(ctx context.Context, event *entity.Event) error 
 		return err
 	}
 	return nil
+}
+
+// RecordHandler defines interface to handle incoming record.
+type RecordHandler interface {
+	// Handle handles payload and process according to business process.
+	Handle(ctx context.Context, payload []byte) error
+}
+
+// KafkaStripeWebhookConsumer is responsible to consume Stripe webhook event from kafka.
+type KafkaStripeWebhookConsumer struct {
+	client  *kgo.Client
+	handler RecordHandler
+}
+
+// NewKafkaStripeWebhookConsumer creates an instance of KafkaStripeWebhookConsumer.
+func NewKafkaStripeWebhookConsumer(h RecordHandler, bs []string, topic string, cgid string) (*KafkaStripeWebhookConsumer, error) {
+	c, err := kgo.NewClient(
+		kgo.SeedBrokers(bs...),
+		kgo.ConsumerGroup(cgid),
+		kgo.ConsumeTopics(topic),
+		kgo.AutoCommitMarks(), // balance between auto-commit and manual-commit
+	)
+	if err != nil {
+		return nil, fmt.Errorf("fail instantiate kafka client: %v", err)
+	}
+	return &KafkaStripeWebhookConsumer{client: c, handler: h}, nil
+}
+
+// Close closes kafka's client.
+func (k *KafkaStripeWebhookConsumer) Close() {
+	k.client.Close()
+}
+
+// Consume consumes event.
+func (k *KafkaStripeWebhookConsumer) Consume(ctx context.Context) {
+	for {
+		fetches := k.client.PollFetches(ctx)
+		if err := fetches.Err(); err != nil {
+			if ctx.Err() != nil {
+				return
+			}
+			slog.ErrorContext(ctx, "[KafkaStripeWebhookConsumer-Consume] fetch error", "error", err)
+			continue
+		}
+
+		iter := fetches.RecordIter()
+		for !iter.Done() {
+			record := iter.Next()
+			if err := k.handler.Handle(ctx, record.Value); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"[KafkaStripeWebhookConsumer-Consume] handler error",
+					"error", err,
+					"topic", record.Topic,
+					"partition", record.Partition,
+					"offset", record.Offset,
+				)
+				// NOTE: intentionally do not commit on handler errors here to allow for retries.
+				continue
+			}
+
+			k.client.MarkCommitRecords(record)
+		}
+	}
 }

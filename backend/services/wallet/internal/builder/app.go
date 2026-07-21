@@ -18,34 +18,53 @@ type Dependency struct {
 	TxManager    uow.TxManager
 	Queries      *db.Queries
 	StripeClient *client.Stripe
+	KafkaClient  *messaging.KafkaProducer
+	PgWallet     *postgre.Wallet
 }
 
 // BuildWalletController builds wallet controller including all of its dependencies.
 func BuildWalletController(dep *Dependency) *controller.Wallet {
-	pg := postgre.NewWallet(dep.Queries)
-	creator := service.NewWalletCreator(dep.TxManager, pg, dep.StripeClient)
-	topup := service.NewWalletTopup(pg, dep.StripeClient, dep.Config.TopupSuccessURL)
+	creator := service.NewWalletCreator(dep.TxManager, dep.PgWallet, dep.StripeClient)
+	topup := service.NewWalletTopup(dep.PgWallet, dep.StripeClient, dep.Config.TopupSuccessURL)
 	return controller.NewWallet(creator, topup)
 }
 
 // BuildWebhookController builds webhook controller including all of its dependencies.
 func BuildWebhookController(dep *Dependency) (*controller.Webhook, error) {
-	pr, err := messaging.NewKafkaProducer(dep.Config.Kafka.Brokers)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := service.StripeWebhookReceiverConfig{
-		Producer:         pr,
+	e := service.NewStripeEventHandler(dep.PgWallet)
+	cfg := service.StripeWebhookHandlerConfig{
+		Producer:         dep.KafkaClient,
 		EventConstructor: dep.StripeClient,
-		Topic:            dep.Config.Stripe.WebhookTopic,
+		Topic:            dep.Config.Kafka.StripeWebhookTopic,
+		EventHandler:     e,
 	}
-	receiver, err := service.NewStripeWebhookReceiver(cfg)
+	handler, err := service.NewStripeWebhookHandler(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	return controller.NewWebhook(receiver), nil
+	return controller.NewWebhook(handler), nil
+}
+
+// BuildStripeEventConsumer builds Stripe event consumer.
+func BuildStripeEventConsumer(dep *Dependency) (*messaging.KafkaStripeWebhookConsumer, error) {
+	e := service.NewStripeEventHandler(dep.PgWallet)
+	cfg := service.StripeWebhookHandlerConfig{
+		Producer:         dep.KafkaClient,
+		EventConstructor: dep.StripeClient,
+		Topic:            dep.Config.Kafka.StripeWebhookTopic,
+		EventHandler:     e,
+	}
+	h, err := service.NewStripeWebhookHandler(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	c, err := messaging.NewKafkaStripeWebhookConsumer(h, dep.Config.Kafka.Brokers, dep.Config.Kafka.StripeWebhookTopic, dep.Config.Kafka.StripeWebhookConsumerGroupID)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 // BuildQueries builds sqlc queries.
@@ -54,7 +73,21 @@ func BuildQueries(tr uow.Tr, getter uow.TxGetter) *db.Queries {
 	return db.New(tx)
 }
 
+// BuildPostgreWallet builds postgre repository.
+func BuildPostgreWallet(q *db.Queries) *postgre.Wallet {
+	return postgre.NewWallet(q)
+}
+
 // BuildStripeClient builds Stripe client.
 func BuildStripeClient(cfg *config.Config) *client.Stripe {
 	return client.NewStripe(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret)
+}
+
+// BuildKafkaClient builds Kafka client.
+func BuildKafkaClient(cfg *config.Config) (*messaging.KafkaProducer, error) {
+	c, err := messaging.NewKafkaProducer(cfg.Kafka.Brokers)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }

@@ -101,7 +101,7 @@ func TestWebhook_Stripe(t *testing.T) {
 		}.ToContextRecorder(t)
 
 		st := createWebhookSuite(t)
-		st.webhookReceiver.EXPECT().Receive(c.Request().Context(), mock.MatchedBy(func(event *entity.StripeEvent) bool {
+		st.webhookHandler.EXPECT().Receive(c.Request().Context(), mock.MatchedBy(func(event *entity.StripeEvent) bool {
 			return string(event.Payload) == string(testPayload) && event.Header == testSignature
 		})).Return(assert.AnError)
 
@@ -121,7 +121,7 @@ func TestWebhook_Stripe(t *testing.T) {
 		}.ToContextRecorder(t)
 
 		st := createWebhookSuite(t)
-		st.webhookReceiver.EXPECT().Receive(c.Request().Context(), mock.MatchedBy(func(event *entity.StripeEvent) bool {
+		st.webhookHandler.EXPECT().Receive(c.Request().Context(), mock.MatchedBy(func(event *entity.StripeEvent) bool {
 			return string(event.Payload) == string(testPayload) && event.Header == testSignature
 		})).Return(nil)
 
@@ -134,14 +134,14 @@ func TestWebhook_Stripe(t *testing.T) {
 
 type WebhookSuite struct {
 	webhookController *controller.Webhook
-	webhookReceiver   *mockservice.MockReceiveStripeWebhook
+	webhookHandler    *mockservice.MockHandleStripeWebhook
 }
 
 func createWebhookSuite(t *testing.T) *WebhookSuite {
-	r := mockservice.NewMockReceiveStripeWebhook(t)
+	r := mockservice.NewMockHandleStripeWebhook(t)
 	w := controller.NewWebhook(r)
 	return &WebhookSuite{
 		webhookController: w,
-		webhookReceiver:   r,
+		webhookHandler:    r,
 	}
 }

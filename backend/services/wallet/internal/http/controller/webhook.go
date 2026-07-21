@@ -20,12 +20,12 @@ const (
 
 // Webhook handles HTTP request for webhook.
 type Webhook struct {
-	receiver service.ReceiveStripeWebhook
+	handler service.HandleStripeWebhook
 }
 
 // NewWebhook creates an instance of Webhook.
-func NewWebhook(r service.ReceiveStripeWebhook) *Webhook {
-	return &Webhook{receiver: r}
+func NewWebhook(h service.HandleStripeWebhook) *Webhook {
+	return &Webhook{handler: h}
 }
 
 // RegisterRoute registers all routes in webhook controller.
@@ -51,6 +51,6 @@ func (w *Webhook) Stripe(c *echo.Context) error {
 	}
 
 	event := &entity.StripeEvent{Payload: payload, Header: header}
-	err = w.receiver.Receive(c.Request().Context(), event)
+	err = w.handler.Receive(c.Request().Context(), event)
 	return dto.SendResponse(c, nil, err, http.StatusOK)
 }

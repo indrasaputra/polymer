@@ -3,12 +3,17 @@ package postgre
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/repository/db"
 	sdkpostgre "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/database/postgre"
+)
+
+var (
+	systemUser, _ = uuid.Parse("00000000-0000-7575-8331-5757e3110000")
 )
 
 // Wallet is responsible to connect wallet entity with wallets table in PostgreSQL.
@@ -176,6 +181,25 @@ func (w *Wallet) GetPendingTransactionByIdempotencyKey(ctx context.Context, key 
 		return nil, entity.ErrInternal
 	}
 	return convertDBTransactionToEntityTransaction(res), nil
+}
+
+// UpdatePendingTransactionByCheckoutSessionIDToCompleted updates a pending transaction to completed.
+func (w *Wallet) UpdatePendingTransactionByCheckoutSessionIDToCompleted(ctx context.Context, id string) error {
+	param := db.UpdatePendingTransactionByCheckoutSessionIDToCompletedParams{
+		CheckoutSessionID: &id,
+		UpdatedAt:         time.Now().UTC(),
+		UpdatedBy:         systemUser,
+	}
+
+	_, err := w.queries.UpdatePendingTransactionByCheckoutSessionIDToCompleted(ctx, param)
+	if err == sdkpostgre.ErrNotFound {
+		return entity.ErrNilTransaction
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-UpdatePendingTransactionByCheckoutSessionIDToCompleted] fail update transaction", "error", err)
+		return entity.ErrInternal
+	}
+	return nil
 }
 
 func convertDBWalletToEntityWallet(w *db.Wallet) *entity.Wallet {
