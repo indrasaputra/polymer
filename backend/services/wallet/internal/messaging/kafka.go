@@ -10,25 +10,30 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
-// KafkaProducer is responsible for producing event to kafka.
-type KafkaProducer struct {
+// Kafka is responsible for producing event to kafka.
+type Kafka struct {
 	client *kgo.Client
 }
 
-// NewKafkaProducer creates an instance of Producer.
-func NewKafkaProducer(bs []string) (*KafkaProducer, error) {
+// NewKafka creates an instance of Producer.
+func NewKafka(bs []string) (*Kafka, error) {
 	c, err := kgo.NewClient(
 		kgo.SeedBrokers(bs...),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("fail instantiate kafka client: %v", err)
 	}
-	return &KafkaProducer{client: c}, nil
+	return &Kafka{client: c}, nil
+}
+
+// Close closes kafka's client.
+func (k *Kafka) Close() {
+	k.client.Close()
 }
 
 // Produce produces event to kafka.
 // It is synchronous process.
-func (k *KafkaProducer) Produce(ctx context.Context, event *entity.Event) error {
+func (k *Kafka) Produce(ctx context.Context, event *entity.Event) error {
 	record := &kgo.Record{
 		Key:   event.Key,
 		Value: event.Payload,

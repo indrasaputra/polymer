@@ -64,3 +64,16 @@ func TestBuildStripeClient(t *testing.T) {
 		assert.NotNil(t, client)
 	})
 }
+
+func TestBuildKafkaClient(t *testing.T) {
+	t.Run("error create kafka client", func(t *testing.T) {
+		cfg := &config.Config{
+			Kafka: config.Kafka{},
+		}
+
+		client, err := builder.BuildKafkaClient(cfg)
+
+		assert.Error(t, err)
+		assert.Nil(t, client)
+	})
+}

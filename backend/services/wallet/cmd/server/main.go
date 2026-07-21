@@ -39,14 +39,18 @@ func main() {
 	txm, err := uow.NewTxManager(pool)
 	raiseErrorIfAny(err)
 
-	stripeClient := builder.BuildStripeClient(cfg)
 	queries := builder.BuildQueries(pool, uow.NewTxGetter())
+
+	stripeClient := builder.BuildStripeClient(cfg)
+	kafkaClient, err := builder.BuildKafkaClient(cfg)
+	raiseErrorIfAny(err)
 
 	dep := &builder.Dependency{
 		Config:       cfg,
 		TxManager:    txm,
 		Queries:      queries,
 		StripeClient: stripeClient,
+		KafkaClient:  kafkaClient,
 	}
 
 	srv, err := server.New(cfg, logger, traceProvider, metricProvider)
@@ -58,6 +62,7 @@ func main() {
 	defer func() {
 		_ = traceProvider.Shutdown(ctx)
 		_ = metricProvider.Shutdown(ctx)
+		kafkaClient.Close()
 		stop()
 	}()
 

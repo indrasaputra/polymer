@@ -18,6 +18,7 @@ type Dependency struct {
 	TxManager    uow.TxManager
 	Queries      *db.Queries
 	StripeClient *client.Stripe
+	KafkaClient  *messaging.Kafka
 }
 
 // BuildWalletController builds wallet controller including all of its dependencies.
@@ -30,13 +31,8 @@ func BuildWalletController(dep *Dependency) *controller.Wallet {
 
 // BuildWebhookController builds webhook controller including all of its dependencies.
 func BuildWebhookController(dep *Dependency) (*controller.Webhook, error) {
-	pr, err := messaging.NewKafkaProducer(dep.Config.Kafka.Brokers)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg := service.StripeWebhookReceiverConfig{
-		Producer:         pr,
+		Producer:         dep.KafkaClient,
 		EventConstructor: dep.StripeClient,
 		Topic:            dep.Config.Stripe.WebhookTopic,
 	}
@@ -57,4 +53,13 @@ func BuildQueries(tr uow.Tr, getter uow.TxGetter) *db.Queries {
 // BuildStripeClient builds Stripe client.
 func BuildStripeClient(cfg *config.Config) *client.Stripe {
 	return client.NewStripe(cfg.Stripe.APIKey, cfg.Stripe.WebhookSecret)
+}
+
+// BuildKafkaClient builds Kafka client.
+func BuildKafkaClient(cfg *config.Config) (*messaging.Kafka, error) {
+	c, err := messaging.NewKafka(cfg.Kafka.Brokers)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
 }
