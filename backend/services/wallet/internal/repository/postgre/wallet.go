@@ -196,7 +196,7 @@ func (w *Wallet) UpdatePendingTransactionByCheckoutSessionIDToCompleted(ctx cont
 		return entity.ErrNilTransaction
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-UpdatePendingTransactionByCheckoutSessionIDToCompleted] fail insert transaction", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-UpdatePendingTransactionByCheckoutSessionIDToCompleted] fail update transaction", "error", err)
 		return entity.ErrInternal
 	}
 	return nil

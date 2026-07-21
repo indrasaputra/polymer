@@ -17,12 +17,12 @@ var (
 
 // ToSubunits converts amount to its smallest currency.
 // E.g: USD to cents.
-func ToSubunits(amout decimal.Decimal, currencyCode string) (int64, error) {
+func ToSubunits(amount decimal.Decimal, currencyCode string) (int64, error) {
 	digit, ok := currency.GetDigits(currencyCode)
 	if !ok {
 		return 0, entity.ErrInvalidCurrency
 	}
 
-	su := amout.Mul(decimalTen.Pow(decimal.NewFromInt32(int32(digit)))).IntPart()
+	su := amount.Mul(decimalTen.Pow(decimal.NewFromInt32(int32(digit)))).IntPart()
 	return su, nil
 }

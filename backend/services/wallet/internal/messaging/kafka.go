@@ -93,9 +93,20 @@ func (k *KafkaStripeWebhookConsumer) Consume(ctx context.Context) {
 		iter := fetches.RecordIter()
 		for !iter.Done() {
 			record := iter.Next()
-			if err := k.handler.Handle(ctx, record.Value); err == nil {
-				k.client.MarkCommitRecords(record)
+			if err := k.handler.Handle(ctx, record.Value); err != nil {
+				slog.ErrorContext(
+					ctx,
+					"[KafkaStripeWebhookConsumer-Consume] handler error",
+					"error", err,
+					"topic", record.Topic,
+					"partition", record.Partition,
+					"offset", record.Offset,
+				)
+				// NOTE: intentionally do not commit on handler errors here to allow for retries.
+				continue
 			}
+
+			k.client.MarkCommitRecords(record)
 		}
 	}
 }
