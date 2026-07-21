@@ -264,3 +264,38 @@ func (q *Queries) InsertWallet(ctx context.Context, arg InsertWalletParams) (*Wa
 	)
 	return &i, err
 }
+
+const updatePendingTransactionByCheckoutSessionIDToCompleted = `-- name: UpdatePendingTransactionByCheckoutSessionIDToCompleted :one
+UPDATE transactions
+SET status = 'completed', updated_at = $1, updated_by = $2
+WHERE checkout_session_id = $3 AND status = 'pending'
+RETURNING id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
+`
+
+type UpdatePendingTransactionByCheckoutSessionIDToCompletedParams struct {
+	UpdatedAt         time.Time
+	UpdatedBy         uuid.UUID
+	CheckoutSessionID *string
+}
+
+func (q *Queries) UpdatePendingTransactionByCheckoutSessionIDToCompleted(ctx context.Context, arg UpdatePendingTransactionByCheckoutSessionIDToCompletedParams) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, updatePendingTransactionByCheckoutSessionIDToCompleted, arg.UpdatedAt, arg.UpdatedBy, arg.CheckoutSessionID)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Status,
+		&i.IdempotencyKey,
+		&i.Amount,
+		&i.Currency,
+		&i.CheckoutSessionID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}

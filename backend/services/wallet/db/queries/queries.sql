@@ -34,3 +34,9 @@ RETURNING *;
 SELECT * FROM transactions
 WHERE idempotency_key = $1 AND status = 'pending' AND deleted_at IS NULL
 LIMIT 1;
+
+-- name: UpdatePendingTransactionByCheckoutSessionIDToCompleted :one
+UPDATE transactions
+SET status = 'completed', updated_at = $1, updated_by = $2
+WHERE checkout_session_id = $3 AND status = 'pending'
+RETURNING *;

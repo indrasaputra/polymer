@@ -4,20 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/bojanz/currency"
-	"github.com/shopspring/decimal"
 	"github.com/stripe/stripe-go/v86"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
-)
-
-const (
-	defaultCurrencyDigit = uint8(2)
-	ten                  = 10
-)
-
-var (
-	decimalTen = decimal.NewFromInt(ten)
+	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/money"
 )
 
 // Stripe is responsible to connect with Stripe API.
@@ -60,7 +50,11 @@ func (s *Stripe) GetCheckoutSession(ctx context.Context, id string) (*entity.Che
 
 // CreateCheckoutSession creates a checkout.
 func (s *Stripe) CreateCheckoutSession(ctx context.Context, input *entity.CheckoutInput) (*entity.CheckoutSession, error) {
-	amount := toSmallestUnitCurrency(input.Amount, input.Currency)
+	amount, err := money.ToSubunits(input.Amount, input.Currency)
+	if err != nil {
+		slog.ErrorContext(ctx, "[Stripe-CreateCheckoutSessionURL] fail convert to subunits", "error", err)
+		return nil, entity.ErrBadRequest
+	}
 
 	param := &stripe.CheckoutSessionCreateParams{
 		Customer:   stripe.String(input.StripeCustomerID),
@@ -98,14 +92,4 @@ func (s *Stripe) ConstructEvent(ctx context.Context, payload []byte, header stri
 		return nil, entity.ErrInvalidStripeEvent
 	}
 	return &event, nil
-}
-
-func toSmallestUnitCurrency(amout decimal.Decimal, currencyCode string) int64 {
-	digit, ok := currency.GetDigits(currencyCode)
-	if !ok {
-		digit = defaultCurrencyDigit
-	}
-
-	cents := amout.Mul(decimalTen.Pow(decimal.NewFromInt32(int32(digit)))).IntPart()
-	return cents
 }
