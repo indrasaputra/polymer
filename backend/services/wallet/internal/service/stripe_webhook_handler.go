@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	stripeEventType = "checkout.session.completed"
+	stripeEventTypeCheckoutSessionCompleted = "checkout.session.completed"
 )
 
 // HandleStripeWebhook defines interface to receive webhook from Stripe.
@@ -109,7 +109,7 @@ func (s *StripeWebhookHandler) Handle(ctx context.Context, payload []byte) error
 	}
 
 	switch event.Type {
-	case stripeEventType:
+	case stripeEventTypeCheckoutSessionCompleted:
 		var se stripe.CheckoutSession
 		if err := json.Unmarshal(event.Data.Raw, &se); err != nil {
 			slog.ErrorContext(ctx, "[StripeWebhookHandler-Handle] fail unmarshal checkout.session.completed payload", "error", err)

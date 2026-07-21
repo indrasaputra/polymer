@@ -21,8 +21,8 @@ type StripeEventHandler struct {
 }
 
 // NewStripeEventHandler creates an instance of StripeEventHandler.
-func NewStripeEventHandler() *StripeEventHandler {
-	return &StripeEventHandler{}
+func NewStripeEventHandler(r TransactionRepository) *StripeEventHandler {
+	return &StripeEventHandler{repo: r}
 }
 
 // HandleCheckoutSessionCompleted handles checkout.session.completed.

@@ -60,9 +60,10 @@ type KafkaStripeWebhookConsumer struct {
 }
 
 // NewKafkaStripeWebhookConsumer creates an instance of KafkaStripeWebhookConsumer.
-func NewKafkaStripeWebhookConsumer(h RecordHandler, bs []string, topic string) (*KafkaStripeWebhookConsumer, error) {
+func NewKafkaStripeWebhookConsumer(h RecordHandler, bs []string, topic string, cgid string) (*KafkaStripeWebhookConsumer, error) {
 	c, err := kgo.NewClient(
 		kgo.SeedBrokers(bs...),
+		kgo.ConsumerGroup(cgid),
 		kgo.ConsumeTopics(topic),
 		kgo.AutoCommitMarks(), // balance between auto-commit and manual-commit
 	)
@@ -70,6 +71,11 @@ func NewKafkaStripeWebhookConsumer(h RecordHandler, bs []string, topic string) (
 		return nil, fmt.Errorf("fail instantiate kafka client: %v", err)
 	}
 	return &KafkaStripeWebhookConsumer{client: c, handler: h}, nil
+}
+
+// Close closes kafka's client.
+func (k *KafkaStripeWebhookConsumer) Close() {
+	k.client.Close()
 }
 
 // Consume consumes event.

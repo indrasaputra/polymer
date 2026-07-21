@@ -11,6 +11,7 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/config"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/router"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/http/server"
+	"github.com/indrasaputra/polymer/backend/services/wallet/internal/messaging"
 	"github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/database/postgre"
 	wmid "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/http/middleware"
 	sdklog "github.com/indrasaputra/polymer/backend/services/wallet/pkg/sdk/log"
@@ -40,6 +41,7 @@ func main() {
 	raiseErrorIfAny(err)
 
 	queries := builder.BuildQueries(pool, uow.NewTxGetter())
+	pgWallet := builder.BuildPostgreWallet(queries)
 
 	stripeClient := builder.BuildStripeClient(cfg)
 	kafkaClient, err := builder.BuildKafkaClient(cfg)
@@ -51,7 +53,11 @@ func main() {
 		Queries:      queries,
 		StripeClient: stripeClient,
 		KafkaClient:  kafkaClient,
+		PgWallet:     pgWallet,
 	}
+
+	stripeConsumer, err := builder.BuildStripeEventConsumer(dep)
+	raiseErrorIfAny(err)
 
 	srv, err := server.New(cfg, logger, traceProvider, metricProvider)
 	raiseErrorIfAny(err)
@@ -63,10 +69,14 @@ func main() {
 		_ = traceProvider.Shutdown(ctx)
 		_ = metricProvider.Shutdown(ctx)
 		kafkaClient.Close()
+		stripeConsumer.Close()
 		stop()
+
+		slog.Info("done shutting down")
 	}()
 
 	err = runAll(ctx, stop,
+		func(ctx context.Context) error { return runStripeWebhookConsumer(ctx, stripeConsumer) },
 		func(ctx context.Context) error { return runServer(ctx, srv, cfg) },
 	)
 	raiseErrorIfAny(err)
@@ -75,6 +85,12 @@ func main() {
 func runServer(ctx context.Context, srv *server.Server, cfg *config.Config) error {
 	slog.Info("starting http server")
 	return srv.StartWithGracefulStop(ctx, cfg)
+}
+
+func runStripeWebhookConsumer(ctx context.Context, consumer *messaging.KafkaStripeWebhookConsumer) error {
+	slog.Info("starting Stripe webhook consumer")
+	consumer.Consume(ctx)
+	return nil
 }
 
 func runAll(ctx context.Context, stop context.CancelFunc, fns ...func(context.Context) error) error {

@@ -36,12 +36,13 @@ type Supabase struct {
 type Stripe struct {
 	APIKey        string `env:"STRIPE_API_KEY,required"`
 	WebhookSecret string `env:"STRIPE_WEBHOOK_SECRET,required"`
-	WebhookTopic  string `env:"STRIPE_WEBHOOK_TOPIC,default=stripe-webhooks"`
 }
 
 // Kafka holds config for Kafka.
 type Kafka struct {
-	Brokers []string `env:"KAFKA_BROKERS,default=localhost:9092"`
+	Brokers                      []string `env:"KAFKA_BROKERS,default=localhost:9092"`
+	StripeWebhookTopic           string   `env:"KAFKA_STRIPE_WEBHOOK_TOPIC,default=stripe-webhooks"`
+	StripeWebhookConsumerGroupID string   `env:"KAFKA_STRIPE_WEBHOOK_CONSUMER_GROUP,default=stripe-webhook-consumer-group"`
 }
 
 // New creates an instance of Config.

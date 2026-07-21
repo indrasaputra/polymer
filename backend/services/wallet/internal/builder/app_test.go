@@ -39,6 +39,49 @@ func TestBuildWebhookController(t *testing.T) {
 	})
 }
 
+func TestBuildStripeEventConsumer(t *testing.T) {
+	t.Run("fail create stripe event consumer due to insufficient config", func(t *testing.T) {
+		dep := &builder.Dependency{
+			Config: &config.Config{
+				Kafka:  config.Kafka{Brokers: []string{"localhost:9092"}},
+				Stripe: config.Stripe{},
+			},
+		}
+
+		consumer, err := builder.BuildStripeEventConsumer(dep)
+
+		assert.Error(t, err)
+		assert.Nil(t, consumer)
+	})
+
+	t.Run("success create stripe event consumer", func(t *testing.T) {
+		dep := &builder.Dependency{
+			Config: &config.Config{
+				Kafka: config.Kafka{
+					Brokers:                      []string{"localhost:9092"},
+					StripeWebhookTopic:           "stripe-webhook",
+					StripeWebhookConsumerGroupID: "wallet-consumer-group",
+				},
+				Stripe: config.Stripe{
+					APIKey:        "sk_test_dummy",
+					WebhookSecret: "whsec_dummy",
+				},
+			},
+			StripeClient: builder.BuildStripeClient(&config.Config{
+				Stripe: config.Stripe{
+					APIKey:        "sk_test_dummy",
+					WebhookSecret: "whsec_dummy",
+				},
+			}),
+		}
+
+		consumer, err := builder.BuildStripeEventConsumer(dep)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, consumer)
+	})
+}
+
 func TestBuildQueries(t *testing.T) {
 	t.Run("success create queries", func(t *testing.T) {
 		pool, err := pgxmock.NewPool()
@@ -53,8 +96,23 @@ func TestBuildQueries(t *testing.T) {
 	})
 }
 
+func TestBuildPostgreWallet(t *testing.T) {
+	t.Run("success create postgre wallet", func(t *testing.T) {
+		pool, err := pgxmock.NewPool()
+		if err != nil {
+			t.Fatalf("error opening a stub database connection: %v\n", err)
+		}
+		g := mockuow.NewMockTxGetter(t)
+		queries := builder.BuildQueries(pool, g)
+
+		wallet := builder.BuildPostgreWallet(queries)
+
+		assert.NotNil(t, wallet)
+	})
+}
+
 func TestBuildStripeClient(t *testing.T) {
-	t.Run("error create stripe client", func(t *testing.T) {
+	t.Run("success create stripe client", func(t *testing.T) {
 		cfg := &config.Config{
 			Stripe: config.Stripe{},
 		}
