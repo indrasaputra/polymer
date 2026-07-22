@@ -12,10 +12,6 @@ import (
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
-const (
-	stripeEventTypeCheckoutSessionCompleted = "checkout.session.completed"
-)
-
 // HandleStripeWebhook defines interface to receive webhook from Stripe.
 type HandleStripeWebhook interface {
 	// Receive receives a webhook.
@@ -109,7 +105,7 @@ func (s *StripeWebhookHandler) Handle(ctx context.Context, payload []byte) error
 	}
 
 	switch event.Type {
-	case stripeEventTypeCheckoutSessionCompleted:
+	case stripe.EventTypeCheckoutSessionCompleted:
 		var se stripe.CheckoutSession
 		if err := json.Unmarshal(event.Data.Raw, &se); err != nil {
 			slog.ErrorContext(ctx, "[StripeWebhookHandler-Handle] fail unmarshal checkout.session.completed payload", "error", err)
