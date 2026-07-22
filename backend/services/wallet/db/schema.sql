@@ -58,5 +58,6 @@ CREATE TABLE IF NOT EXISTS transactions (
     deleted_by UUID
 );
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transactions_user_id_status
-ON transactions USING btree (user_id, status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transactions_checkout_session_id
+ON transactions (checkout_session_id)
+WHERE checkout_session_id IS NOT NULL AND deleted_at IS NULL;
