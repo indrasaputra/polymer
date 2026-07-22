@@ -63,6 +63,7 @@ migration.rehash: ## Rehash atlas migration sum.
 ##@ Generator
 .PHONY: gen.mock
 gen.mock: ## Generate mocks.
+	rm -rf test/mock/
 	mockery
 
 .PHONY: gen.db

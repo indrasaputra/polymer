@@ -31,7 +31,7 @@ func BuildWalletController(dep *Dependency) *controller.Wallet {
 
 // BuildWebhookController builds webhook controller including all of its dependencies.
 func BuildWebhookController(dep *Dependency) (*controller.Webhook, error) {
-	e := service.NewStripeEventHandler(dep.PgWallet)
+	e := service.NewStripeEventHandler(dep.TxManager, dep.PgWallet)
 	cfg := service.StripeWebhookHandlerConfig{
 		Producer:         dep.KafkaClient,
 		EventConstructor: dep.StripeClient,
@@ -48,7 +48,7 @@ func BuildWebhookController(dep *Dependency) (*controller.Webhook, error) {
 
 // BuildStripeEventConsumer builds Stripe event consumer.
 func BuildStripeEventConsumer(dep *Dependency) (*messaging.KafkaStripeWebhookConsumer, error) {
-	e := service.NewStripeEventHandler(dep.PgWallet)
+	e := service.NewStripeEventHandler(dep.TxManager, dep.PgWallet)
 	cfg := service.StripeWebhookHandlerConfig{
 		Producer:         dep.KafkaClient,
 		EventConstructor: dep.StripeClient,

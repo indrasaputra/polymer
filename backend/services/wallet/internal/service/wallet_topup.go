@@ -95,10 +95,10 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 		Amount:           input.Amount,
 		Currency:         wallet.Currency,
 		Quantity:         topupQuantity,
-		UserID:           input.UserID,
 		StripeCustomerID: customer.StripeCustomerID,
 		SuccessURL:       wt.successURL,
 		Purpose:          topupPurpose,
+		WalletID:         input.WalletID,
 	}
 	session, err := wt.paymentClient.CreateCheckoutSession(ctx, checkoutInput)
 	if err != nil {

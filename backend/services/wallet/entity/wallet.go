@@ -97,7 +97,7 @@ type CheckoutInput struct {
 	SuccessURL       string
 	Purpose          string
 	Quantity         int
-	UserID           uuid.UUID
+	WalletID         uuid.UUID
 }
 
 // CheckoutSession defines logical data related to checkout session.
