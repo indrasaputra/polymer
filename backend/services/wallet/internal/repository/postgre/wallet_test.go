@@ -49,7 +49,7 @@ func TestWallet_InsertWallet(t *testing.T) {
 		res, err := st.pgWallet.InsertWallet(testCtx, nil)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrEmptyWallet, err)
+		assert.Equal(t, entity.ErrWalletEmpty, err)
 		assert.Nil(t, res)
 	})
 
@@ -67,7 +67,7 @@ func TestWallet_InsertWallet(t *testing.T) {
 		res, err := st.pgWallet.InsertWallet(testCtx, wallet)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrEmptyWallet, err)
+		assert.Equal(t, entity.ErrWalletNotFound, err)
 		assert.Nil(t, res)
 	})
 
@@ -153,7 +153,7 @@ func TestWallet_InsertCustomer(t *testing.T) {
 		res, err := st.pgWallet.InsertCustomer(testCtx, nil)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilCustomer, err)
+		assert.Equal(t, entity.ErrCustomerEmpty, err)
 		assert.Nil(t, res)
 	})
 
@@ -171,7 +171,7 @@ func TestWallet_InsertCustomer(t *testing.T) {
 		res, err := st.pgWallet.InsertCustomer(testCtx, customer)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilCustomer, err)
+		assert.Equal(t, entity.ErrCustomerNotFound, err)
 		assert.Nil(t, res)
 	})
 
@@ -258,7 +258,7 @@ func TestWallet_GetActiveCustomerByUserID(t *testing.T) {
 		res, err := st.pgWallet.GetActiveCustomerByUserID(testCtx, customer.UserID)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilCustomer, err)
+		assert.Equal(t, entity.ErrCustomerNotFound, err)
 		assert.Nil(t, res)
 	})
 
@@ -309,7 +309,7 @@ func TestWallet_GetActiveWalletByIDAndUserID(t *testing.T) {
 		res, err := st.pgWallet.GetActiveWalletByIDAndUserID(testCtx, wallet.ID, wallet.UserID)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilWallet, err)
+		assert.Equal(t, entity.ErrWalletNotFound, err)
 		assert.Nil(t, res)
 	})
 
@@ -355,7 +355,7 @@ func TestWallet_InsertTransaction(t *testing.T) {
 		res, err := st.pgWallet.InsertTransaction(testCtx, nil)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilTransaction, err)
+		assert.Equal(t, entity.ErrTransactionEmpty, err)
 		assert.Nil(t, res)
 	})
 
@@ -406,7 +406,7 @@ func TestWallet_GetActivePendingTransactionByIdempotencyKey(t *testing.T) {
 		res, err := st.pgWallet.GetActivePendingTransactionByIdempotencyKey(testCtx, trx.IdempotencyKey)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilTransaction, err)
+		assert.Equal(t, entity.ErrTransactionNotFound, err)
 		assert.Nil(t, res)
 	})
 
@@ -458,7 +458,7 @@ func TestWallet_UpdateActiveTransactionToCompletedByCheckoutSessionID(t *testing
 		err := st.pgWallet.UpdateActiveTransactionToCompletedByCheckoutSessionID(testCtx, sessionID)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilTransaction, err)
+		assert.Equal(t, entity.ErrTransactionNotFound, err)
 	})
 
 	t.Run("query returns error", func(t *testing.T) {
@@ -507,7 +507,7 @@ func TestWallet_GetActiveTransactionByCheckoutSessionIDForUpdate(t *testing.T) {
 		res, err := st.pgWallet.GetActiveTransactionByCheckoutSessionIDForUpdate(testCtx, sessionID)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilTransaction, err)
+		assert.Equal(t, entity.ErrTransactionNotFound, err)
 		assert.Nil(t, res)
 	})
 
@@ -558,7 +558,7 @@ func TestWallet_GetActiveWalletByIDForUpdate(t *testing.T) {
 		res, err := st.pgWallet.GetActiveWalletByIDForUpdate(testCtx, wallet.ID)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrNilWallet, err)
+		assert.Equal(t, entity.ErrWalletNotFound, err)
 		assert.Nil(t, res)
 	})
 

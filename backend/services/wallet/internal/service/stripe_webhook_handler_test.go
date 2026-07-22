@@ -122,7 +122,7 @@ func TestStripeWebhookHandler_Receive(t *testing.T) {
 		err := st.handler.Receive(testCtx, incoming)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrInvalidStripeEvent, err)
+		assert.Equal(t, entity.ErrStripeEventInvalid, err)
 	})
 
 	t.Run("produce event returns error", func(t *testing.T) {
@@ -169,7 +169,7 @@ func TestStripeWebhookHandler_Handle(t *testing.T) {
 		err := st.handler.Handle(testCtx, payload)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrBadRequest, err)
+		assert.Equal(t, entity.ErrGeneralInvalid, err)
 	})
 
 	t.Run("fail unmarshal checkout session payload for checkout.session.completed event", func(t *testing.T) {
@@ -179,7 +179,7 @@ func TestStripeWebhookHandler_Handle(t *testing.T) {
 		err := st.handler.Handle(testCtx, payload)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrBadRequest, err)
+		assert.Equal(t, entity.ErrGeneralInvalid, err)
 	})
 
 	t.Run("checkout.session.completed handler returns error", func(t *testing.T) {

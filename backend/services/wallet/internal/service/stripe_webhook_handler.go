@@ -85,7 +85,7 @@ func (s *StripeWebhookHandler) Receive(ctx context.Context, incoming *entity.Str
 	se, err := s.constructor.ConstructEvent(ctx, incoming.Payload, incoming.Header)
 	if err != nil {
 		slog.ErrorContext(ctx, "[StripeWebhookHandler-Receive] incoming event is invalid", "error", err)
-		return entity.ErrInvalidStripeEvent
+		return entity.ErrStripeEventInvalid
 	}
 
 	event := &entity.Event{
@@ -105,7 +105,7 @@ func (s *StripeWebhookHandler) Handle(ctx context.Context, payload []byte) error
 	var event stripe.Event
 	if err := json.Unmarshal(payload, &event); err != nil {
 		slog.ErrorContext(ctx, "[StripeWebhookHandler-Handle] fail unmarshal event payload", "error", err)
-		return entity.ErrBadRequest
+		return entity.ErrGeneralInvalid
 	}
 
 	switch event.Type {
@@ -113,7 +113,7 @@ func (s *StripeWebhookHandler) Handle(ctx context.Context, payload []byte) error
 		var se stripe.CheckoutSession
 		if err := json.Unmarshal(event.Data.Raw, &se); err != nil {
 			slog.ErrorContext(ctx, "[StripeWebhookHandler-Handle] fail unmarshal checkout.session.completed payload", "error", err)
-			return entity.ErrBadRequest
+			return entity.ErrGeneralInvalid
 		}
 		return s.handler.HandleCheckoutSessionCompleted(ctx, &se)
 	default:

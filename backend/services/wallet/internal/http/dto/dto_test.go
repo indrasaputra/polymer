@@ -24,7 +24,7 @@ func TestSendResponse(t *testing.T) {
 		e := echo.New()
 		c := e.NewContext(req, rec)
 
-		err := dto.SendResponse(c, nil, entity.ErrEmptyWallet, 0)
+		err := dto.SendResponse(c, nil, entity.ErrWalletEmpty, 0)
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusBadRequest, rec.Code)

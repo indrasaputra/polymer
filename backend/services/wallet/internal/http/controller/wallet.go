@@ -35,11 +35,11 @@ func (w *Wallet) RegisterRoute(g *echo.Group, jwtmid echo.MiddlewareFunc) {
 func (w *Wallet) Create(c *echo.Context, currentUser *entity.CurrentUser) error {
 	var request dto.CreateWalletRequest
 	if err := c.Bind(&request); err != nil {
-		return dto.SendResponse(c, nil, entity.ErrEmptyWallet, 0)
+		return dto.SendResponse(c, nil, entity.ErrWalletEmpty, 0)
 	}
 
 	if err := c.Validate(request); err != nil {
-		return dto.SendResponse(c, nil, entity.ErrEmptyWallet, 0)
+		return dto.SendResponse(c, nil, entity.ErrWalletEmpty, 0)
 	}
 
 	input := &entity.CreateWalletInput{UserID: currentUser.ID, Currency: request.Currency, Email: currentUser.Email}
@@ -52,19 +52,19 @@ func (w *Wallet) Create(c *echo.Context, currentUser *entity.CurrentUser) error 
 func (w *Wallet) Topup(c *echo.Context, currentUser *entity.CurrentUser) error {
 	var request dto.TopupWalletRequest
 	if err := echo.BindHeaders(c, &request); err != nil {
-		return dto.SendResponse(c, nil, entity.ErrEmptyTopup, 0)
+		return dto.SendResponse(c, nil, entity.ErrTopupEmpty, 0)
 	}
 	if err := c.Bind(&request); err != nil {
-		return dto.SendResponse(c, nil, entity.ErrEmptyTopup, 0)
+		return dto.SendResponse(c, nil, entity.ErrTopupEmpty, 0)
 	}
 
 	if err := c.Validate(request); err != nil {
-		return dto.SendResponse(c, nil, entity.ErrEmptyTopup, 0)
+		return dto.SendResponse(c, nil, entity.ErrTopupEmpty, 0)
 	}
 
 	amount, err := decimal.NewFromString(request.Amount)
 	if err != nil {
-		return dto.SendResponse(c, nil, entity.ErrEmptyTopup, http.StatusBadRequest)
+		return dto.SendResponse(c, nil, entity.ErrTopupEmpty, http.StatusBadRequest)
 	}
 
 	input := &entity.TopupWalletInput{

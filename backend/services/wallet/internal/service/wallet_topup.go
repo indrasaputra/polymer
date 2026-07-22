@@ -63,7 +63,7 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 	}
 
 	trx, err := wt.walletRepo.GetActivePendingTransactionByIdempotencyKey(ctx, input.IdempotencyKey)
-	if err != nil && err != entity.ErrNilTransaction {
+	if err != nil && err != entity.ErrTransactionNotFound {
 		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get transaction", "error", err)
 		return nil, entity.ErrInternal
 	}
@@ -117,19 +117,19 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 
 func validateTopupWalletInput(input *entity.TopupWalletInput) error {
 	if input == nil {
-		return entity.ErrEmptyInput
+		return entity.ErrTopupEmpty
 	}
 	if input.UserID == uuid.Nil {
-		return entity.ErrInvalidUser
+		return entity.ErrUserEmpty
 	}
 	if input.WalletID == uuid.Nil {
-		return entity.ErrInvalidWallet
+		return entity.ErrWalletEmpty
 	}
 	if input.IdempotencyKey == uuid.Nil {
-		return entity.ErrInvalidIdempotencyKey
+		return entity.ErrIdempotencyKeyEmpty
 	}
 	if input.Amount.LessThanOrEqual(decimal.Zero) {
-		return entity.ErrInvalidTopupAmount
+		return entity.ErrTopupAmountInvalid
 	}
 	return nil
 }

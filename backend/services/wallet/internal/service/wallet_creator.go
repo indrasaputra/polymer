@@ -88,11 +88,11 @@ func (wc *WalletCreator) Create(ctx context.Context, input *entity.CreateWalletI
 
 func (wc *WalletCreator) getOrCreateCustomer(ctx context.Context, input *entity.CreateWalletInput) (*entity.Customer, error) {
 	customer, err := wc.walletRepo.GetActiveCustomerByUserID(ctx, input.UserID)
-	if err != nil && err != entity.ErrNilCustomer {
+	if err != nil && err != entity.ErrCustomerNotFound {
 		slog.ErrorContext(ctx, "[WalletCreator-getOrCreateCustomer] fail get customer", "error", err)
 		return nil, entity.ErrInternal
 	}
-	if err == entity.ErrNilCustomer {
+	if err == entity.ErrCustomerNotFound {
 		customerID, err := wc.customerClient.CreateCustomer(ctx, input.Email)
 		if err != nil {
 			slog.ErrorContext(ctx, "[WalletCreator-getOrCreateCustomer] fail create customer to client", "error", err)
@@ -111,13 +111,13 @@ func (wc *WalletCreator) getOrCreateCustomer(ctx context.Context, input *entity.
 
 func validateCreateWalletInput(wallet *entity.CreateWalletInput) error {
 	if wallet == nil {
-		return entity.ErrEmptyWallet
+		return entity.ErrWalletEmpty
 	}
 	if wallet.UserID == uuid.Nil {
-		return entity.ErrInvalidUser
+		return entity.ErrUserEmpty
 	}
 	if !currency.IsValid(wallet.Currency) {
-		return entity.ErrInvalidCurrency
+		return entity.ErrCurrencyInvalid
 	}
 
 	return nil
