@@ -196,7 +196,7 @@ func TestWalletTopup_Topup(t *testing.T) {
 		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).
 			Return(customer, nil)
 		st.paymentClient.EXPECT().CreateCheckoutSession(testCtx, mock.MatchedBy(func(ci *entity.CheckoutInput) bool {
-			return ci.UserID == input.UserID &&
+			return ci.WalletID == input.WalletID &&
 				ci.Currency == wallet.Currency &&
 				ci.StripeCustomerID == customer.StripeCustomerID &&
 				ci.Amount.Equal(input.Amount)
@@ -221,7 +221,7 @@ func TestWalletTopup_Topup(t *testing.T) {
 		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).
 			Return(customer, nil)
 		st.paymentClient.EXPECT().CreateCheckoutSession(testCtx, mock.MatchedBy(func(ci *entity.CheckoutInput) bool {
-			return ci.UserID == input.UserID &&
+			return ci.WalletID == input.WalletID &&
 				ci.Currency == wallet.Currency &&
 				ci.StripeCustomerID == customer.StripeCustomerID &&
 				ci.Amount.Equal(input.Amount)
@@ -256,7 +256,7 @@ func TestWalletTopup_Topup(t *testing.T) {
 		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).
 			Return(customer, nil)
 		st.paymentClient.EXPECT().CreateCheckoutSession(testCtx, mock.MatchedBy(func(ci *entity.CheckoutInput) bool {
-			return ci.UserID == input.UserID &&
+			return ci.WalletID == input.WalletID &&
 				ci.Currency == wallet.Currency &&
 				ci.StripeCustomerID == customer.StripeCustomerID &&
 				ci.Amount.Equal(input.Amount)

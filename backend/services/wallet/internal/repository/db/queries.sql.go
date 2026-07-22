@@ -13,6 +13,84 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const addWalletBalance = `-- name: AddWalletBalance :one
+UPDATE wallets SET balance = balance + $2 WHERE id = $1 --noqa
+RETURNING id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
+`
+
+type AddWalletBalanceParams struct {
+	ID     uuid.UUID
+	Amount decimal.Decimal
+}
+
+func (q *Queries) AddWalletBalance(ctx context.Context, arg AddWalletBalanceParams) (*Wallet, error) {
+	row := q.db.QueryRow(ctx, addWalletBalance, arg.ID, arg.Amount)
+	var i Wallet
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Balance,
+		&i.Currency,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
+const getActiveTransactionByCheckoutSessionIDForUpdate = `-- name: GetActiveTransactionByCheckoutSessionIDForUpdate :one
+SELECT id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM transactions
+WHERE checkout_session_id = $1 AND deleted_at IS NULL
+LIMIT 1 FOR NO KEY UPDATE
+`
+
+func (q *Queries) GetActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Context, checkoutSessionID *string) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, getActiveTransactionByCheckoutSessionIDForUpdate, checkoutSessionID)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Type,
+		&i.Status,
+		&i.IdempotencyKey,
+		&i.Amount,
+		&i.Currency,
+		&i.CheckoutSessionID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
+const getActiveWalletByIDForUpdate = `-- name: GetActiveWalletByIDForUpdate :one
+SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets WHERE id = $1 AND deleted_at IS NULL LIMIT 1 FOR NO KEY UPDATE
+`
+
+func (q *Queries) GetActiveWalletByIDForUpdate(ctx context.Context, id uuid.UUID) (*Wallet, error) {
+	row := q.db.QueryRow(ctx, getActiveWalletByIDForUpdate, id)
+	var i Wallet
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Balance,
+		&i.Currency,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.CreatedBy,
+		&i.UpdatedBy,
+		&i.DeletedBy,
+	)
+	return &i, err
+}
+
 const getCustomerByUserID = `-- name: GetCustomerByUserID :one
 SELECT id, user_id, stripe_customer_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM customers
 WHERE user_id = $1 AND deleted_at IS NULL
@@ -65,6 +143,7 @@ func (q *Queries) GetPendingTransactionByIdempotencyKey(ctx context.Context, ide
 }
 
 const getUserActiveWalletByUserIdAndCurrency = `-- name: GetUserActiveWalletByUserIdAndCurrency :one
+
 SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM wallets
 WHERE user_id = $1 AND currency = $2 AND deleted_at IS NULL
 LIMIT 1
@@ -75,6 +154,7 @@ type GetUserActiveWalletByUserIdAndCurrencyParams struct {
 	Currency string
 }
 
+// noqa
 func (q *Queries) GetUserActiveWalletByUserIdAndCurrency(ctx context.Context, arg GetUserActiveWalletByUserIdAndCurrencyParams) (*Wallet, error) {
 	row := q.db.QueryRow(ctx, getUserActiveWalletByUserIdAndCurrency, arg.UserID, arg.Currency)
 	var i Wallet
@@ -265,21 +345,21 @@ func (q *Queries) InsertWallet(ctx context.Context, arg InsertWalletParams) (*Wa
 	return &i, err
 }
 
-const updatePendingTransactionByCheckoutSessionIDToCompleted = `-- name: UpdatePendingTransactionByCheckoutSessionIDToCompleted :one
+const updateTransactionToCompletedByCheckoutSessionID = `-- name: UpdateTransactionToCompletedByCheckoutSessionID :one
 UPDATE transactions
 SET status = 'completed', updated_at = $1, updated_by = $2
-WHERE checkout_session_id = $3 AND status = 'pending' AND deleted_at IS NULL
+WHERE checkout_session_id = $3 AND deleted_at IS NULL
 RETURNING id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
 `
 
-type UpdatePendingTransactionByCheckoutSessionIDToCompletedParams struct {
+type UpdateTransactionToCompletedByCheckoutSessionIDParams struct {
 	UpdatedAt         time.Time
 	UpdatedBy         uuid.UUID
 	CheckoutSessionID *string
 }
 
-func (q *Queries) UpdatePendingTransactionByCheckoutSessionIDToCompleted(ctx context.Context, arg UpdatePendingTransactionByCheckoutSessionIDToCompletedParams) (*Transaction, error) {
-	row := q.db.QueryRow(ctx, updatePendingTransactionByCheckoutSessionIDToCompleted, arg.UpdatedAt, arg.UpdatedBy, arg.CheckoutSessionID)
+func (q *Queries) UpdateTransactionToCompletedByCheckoutSessionID(ctx context.Context, arg UpdateTransactionToCompletedByCheckoutSessionIDParams) (*Transaction, error) {
+	row := q.db.QueryRow(ctx, updateTransactionToCompletedByCheckoutSessionID, arg.UpdatedAt, arg.UpdatedBy, arg.CheckoutSessionID)
 	var i Transaction
 	err := row.Scan(
 		&i.ID,

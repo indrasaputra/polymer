@@ -57,9 +57,10 @@ func (s *Stripe) CreateCheckoutSession(ctx context.Context, input *entity.Checko
 	}
 
 	param := &stripe.CheckoutSessionCreateParams{
-		Customer:   stripe.String(input.StripeCustomerID),
-		SuccessURL: stripe.String(input.SuccessURL),
-		Mode:       stripe.String(stripe.CheckoutSessionModePayment),
+		Customer:          stripe.String(input.StripeCustomerID),
+		SuccessURL:        stripe.String(input.SuccessURL),
+		Mode:              stripe.String(stripe.CheckoutSessionModePayment),
+		ClientReferenceID: stripe.String(input.WalletID.String()),
 		LineItems: []*stripe.CheckoutSessionCreateLineItemParams{
 			{
 				Quantity: stripe.Int64(int64(input.Quantity)),

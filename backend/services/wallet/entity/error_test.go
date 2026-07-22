@@ -122,3 +122,10 @@ func TestErrInvalidStripeEvent(t *testing.T) {
 		assert.Equal(t, "Invalid Stripe event", entity.ErrInvalidStripeEvent.Error())
 	})
 }
+
+func TestErrInvalidTransaction(t *testing.T) {
+	t.Run("invalid transaction error returns 422 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusUnprocessableEntity, entity.ErrInvalidTransaction.Code)
+		assert.Equal(t, "Transaction is unprocessable", entity.ErrInvalidTransaction.Error())
+	})
+}

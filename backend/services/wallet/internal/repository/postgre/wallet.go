@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 
 	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	"github.com/indrasaputra/polymer/backend/services/wallet/internal/repository/db"
@@ -183,23 +184,60 @@ func (w *Wallet) GetPendingTransactionByIdempotencyKey(ctx context.Context, key 
 	return convertDBTransactionToEntityTransaction(res), nil
 }
 
-// UpdatePendingTransactionByCheckoutSessionIDToCompleted updates a pending transaction to completed.
-func (w *Wallet) UpdatePendingTransactionByCheckoutSessionIDToCompleted(ctx context.Context, id string) error {
-	param := db.UpdatePendingTransactionByCheckoutSessionIDToCompletedParams{
+// UpdateTransactionToCompletedByCheckoutSessionID updates a pending transaction to completed.
+func (w *Wallet) UpdateTransactionToCompletedByCheckoutSessionID(ctx context.Context, id string) error {
+	param := db.UpdateTransactionToCompletedByCheckoutSessionIDParams{
 		CheckoutSessionID: &id,
 		UpdatedAt:         time.Now().UTC(),
 		UpdatedBy:         systemUser,
 	}
 
-	_, err := w.queries.UpdatePendingTransactionByCheckoutSessionIDToCompleted(ctx, param)
+	_, err := w.queries.UpdateTransactionToCompletedByCheckoutSessionID(ctx, param)
 	if err == sdkpostgre.ErrNotFound {
 		return entity.ErrNilTransaction
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-UpdatePendingTransactionByCheckoutSessionIDToCompleted] fail update transaction", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-UpdateTransactionToCompletedByCheckoutSessionID] fail update transaction", "error", err)
 		return entity.ErrInternal
 	}
 	return nil
+}
+
+// GetActiveTransactionByCheckoutSessionIDForUpdate gets active transaction for update.
+func (w *Wallet) GetActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Context, sessionID string) (*entity.Transaction, error) {
+	res, err := w.queries.GetActiveTransactionByCheckoutSessionIDForUpdate(ctx, &sessionID)
+	if err == sdkpostgre.ErrNotFound {
+		return nil, entity.ErrNilTransaction
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-GetActiveTransactionByCheckoutSessionIDForUpdate] fail get transaction", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBTransactionToEntityTransaction(res), nil
+}
+
+// GetActiveWalletByIDForUpdate gets active wallet for update.
+func (w *Wallet) GetActiveWalletByIDForUpdate(ctx context.Context, id uuid.UUID) (*entity.Wallet, error) {
+	res, err := w.queries.GetActiveWalletByIDForUpdate(ctx, id)
+	if err == sdkpostgre.ErrNotFound {
+		return nil, entity.ErrNilWallet
+	}
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-GetActiveWalletByIDForUpdate] fail get wallet", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBWalletToEntityWallet(res), nil
+}
+
+// AddWalletBalance adds some amount to specific wallet.
+func (w *Wallet) AddWalletBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error) {
+	param := db.AddWalletBalanceParams{ID: id, Amount: amount}
+	res, err := w.queries.AddWalletBalance(ctx, param)
+	if err != nil {
+		slog.ErrorContext(ctx, "[PostgreWallet-AddWalletBalance] internal error", "error", err)
+		return nil, entity.ErrInternal
+	}
+	return convertDBWalletToEntityWallet(res), nil
 }
 
 func convertDBWalletToEntityWallet(w *db.Wallet) *entity.Wallet {

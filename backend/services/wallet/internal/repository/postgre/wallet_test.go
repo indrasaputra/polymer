@@ -441,10 +441,10 @@ func TestWallet_GetPendingTransactionByIdempotencyKey(t *testing.T) {
 	})
 }
 
-func TestWallet_UpdatePendingTransactionByCheckoutSessionIDToCompleted(t *testing.T) {
+func TestWallet_UpdateTransactionToCompletedByCheckoutSessionID(t *testing.T) {
 	queryUpdate := `UPDATE transactions
 					SET status = 'completed', updated_at = \$1, updated_by = \$2
-					WHERE checkout_session_id = \$3 AND status = 'pending' AND deleted_at IS NULL
+					WHERE checkout_session_id = \$3 AND deleted_at IS NULL
 					RETURNING id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by`
 
 	t.Run("transaction not found", func(t *testing.T) {
@@ -455,7 +455,7 @@ func TestWallet_UpdatePendingTransactionByCheckoutSessionIDToCompleted(t *testin
 			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), &sessionID).
 			WillReturnError(sdkpostgre.ErrNotFound)
 
-		err := st.pgWallet.UpdatePendingTransactionByCheckoutSessionIDToCompleted(testCtx, sessionID)
+		err := st.pgWallet.UpdateTransactionToCompletedByCheckoutSessionID(testCtx, sessionID)
 
 		assert.Error(t, err)
 		assert.Equal(t, entity.ErrNilTransaction, err)
@@ -469,7 +469,7 @@ func TestWallet_UpdatePendingTransactionByCheckoutSessionIDToCompleted(t *testin
 			WithArgs(pgxmock.AnyArg(), pgxmock.AnyArg(), &sessionID).
 			WillReturnError(assert.AnError)
 
-		err := st.pgWallet.UpdatePendingTransactionByCheckoutSessionIDToCompleted(testCtx, sessionID)
+		err := st.pgWallet.UpdateTransactionToCompletedByCheckoutSessionID(testCtx, sessionID)
 
 		assert.Error(t, err)
 		assert.Equal(t, entity.ErrInternal, err)
@@ -485,9 +485,148 @@ func TestWallet_UpdatePendingTransactionByCheckoutSessionIDToCompleted(t *testin
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "type", "idempotency_key", "status", "amount", "currency", "checkout_session_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
 				AddRow(trx.ID, trx.UserID, db.TransactionType(trx.Type), db.TransactionStatus(trx.Status), trx.IdempotencyKey, trx.Amount, trx.Currency, trx.CheckoutSessionID, trx.CreatedAt, trx.UpdatedAt, trx.DeletedAt, trx.CreatedBy, trx.UpdatedBy, trx.DeletedBy))
 
-		err := st.pgWallet.UpdatePendingTransactionByCheckoutSessionIDToCompleted(testCtx, sessionID)
+		err := st.pgWallet.UpdateTransactionToCompletedByCheckoutSessionID(testCtx, sessionID)
 
 		assert.NoError(t, err)
+	})
+}
+
+func TestWallet_GetActiveTransactionByCheckoutSessionIDForUpdate(t *testing.T) {
+	querySelect := `SELECT id, user_id, type, status, idempotency_key, amount, currency, checkout_session_id, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by FROM transactions
+					WHERE checkout_session_id = \$1 AND deleted_at IS NULL
+					LIMIT 1 FOR NO KEY UPDATE`
+
+	t.Run("transaction not found", func(t *testing.T) {
+		sessionID := "cs_test_123"
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(&sessionID).
+			WillReturnError(sdkpostgre.ErrNotFound)
+
+		res, err := st.pgWallet.GetActiveTransactionByCheckoutSessionIDForUpdate(testCtx, sessionID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrNilTransaction, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("query returns error", func(t *testing.T) {
+		sessionID := "cs_test_123"
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(&sessionID).
+			WillReturnError(assert.AnError)
+
+		res, err := st.pgWallet.GetActiveTransactionByCheckoutSessionIDForUpdate(testCtx, sessionID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrInternal, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("success get active transaction for update", func(t *testing.T) {
+		sessionID := "cs_test_123"
+		trx := createTestTransaction()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(&sessionID).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "type", "idempotency_key", "status", "amount", "currency", "checkout_session_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(trx.ID, trx.UserID, db.TransactionType(trx.Type), db.TransactionStatus(trx.Status), trx.IdempotencyKey, trx.Amount, trx.Currency, trx.CheckoutSessionID, trx.CreatedAt, trx.UpdatedAt, trx.DeletedAt, trx.CreatedBy, trx.UpdatedBy, trx.DeletedBy))
+
+		res, err := st.pgWallet.GetActiveTransactionByCheckoutSessionIDForUpdate(testCtx, sessionID)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+}
+
+func TestWallet_GetActiveWalletByIDForUpdate(t *testing.T) {
+	querySelect := `SELECT id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
+					FROM wallets WHERE id = \$1 AND deleted_at IS NULL  LIMIT 1 FOR NO KEY UPDATE`
+
+	t.Run("wallet not found", func(t *testing.T) {
+		wallet := createTestWallet()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(wallet.ID).
+			WillReturnError(sdkpostgre.ErrNotFound)
+
+		res, err := st.pgWallet.GetActiveWalletByIDForUpdate(testCtx, wallet.ID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrNilWallet, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("query returns error", func(t *testing.T) {
+		wallet := createTestWallet()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(wallet.ID).
+			WillReturnError(assert.AnError)
+
+		res, err := st.pgWallet.GetActiveWalletByIDForUpdate(testCtx, wallet.ID)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrInternal, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("success get active wallet for update", func(t *testing.T) {
+		wallet := createTestWallet()
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(querySelect).
+			WithArgs(wallet.ID).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "balance", "currency", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(wallet.ID, wallet.UserID, wallet.Balance, wallet.Currency, wallet.CreatedAt, wallet.UpdatedAt, wallet.DeletedAt, wallet.CreatedBy, wallet.UpdatedBy, wallet.DeletedBy))
+
+		res, err := st.pgWallet.GetActiveWalletByIDForUpdate(testCtx, wallet.ID)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+	})
+}
+
+func TestWallet_AddWalletBalance(t *testing.T) {
+	queryUpdate := `UPDATE wallets SET balance = balance \+ \$2 WHERE id = \$1 --noqa
+					RETURNING id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by`
+
+	t.Run("add wallet balance returns error", func(t *testing.T) {
+		wallet := createTestWallet()
+		amount := decimal.NewFromInt(50)
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryUpdate).
+			WithArgs(wallet.ID, amount).
+			WillReturnError(assert.AnError)
+
+		res, err := st.pgWallet.AddWalletBalance(testCtx, wallet.ID, amount)
+
+		assert.Error(t, err)
+		assert.Equal(t, entity.ErrInternal, err)
+		assert.Nil(t, res)
+	})
+
+	t.Run("success add wallet balance", func(t *testing.T) {
+		wallet := createTestWallet()
+		amount := decimal.NewFromInt(50)
+		st := createWalletSuite(t)
+		st.getter.EXPECT().DefaultTrOrDB(testCtx, st.db).Return(st.db)
+		st.db.ExpectQuery(queryUpdate).
+			WithArgs(wallet.ID, amount).
+			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "balance", "currency", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
+				AddRow(wallet.ID, wallet.UserID, wallet.Balance, wallet.Currency, wallet.CreatedAt, wallet.UpdatedAt, wallet.DeletedAt, wallet.CreatedBy, wallet.UpdatedBy, wallet.DeletedBy))
+
+		res, err := st.pgWallet.AddWalletBalance(testCtx, wallet.ID, amount)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
 	})
 }
 

@@ -7,10 +7,9 @@ package service
 import (
 	"context"
 
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stripe/stripe-go/v86"
-
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
 // NewMockHandleStripeWebhook creates a new instance of MockHandleStripeWebhook. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
