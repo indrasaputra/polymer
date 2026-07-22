@@ -31,7 +31,7 @@ func NewWallet(q *db.Queries) *Wallet {
 // If same data exists (user_id, currency), it will just return the record without insert or update.
 func (w *Wallet) InsertWallet(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error) {
 	if wallet == nil {
-		return nil, entity.ErrEmptyWallet
+		return nil, entity.ErrWalletEmpty
 	}
 
 	param := db.InsertWalletParams{
@@ -49,7 +49,7 @@ func (w *Wallet) InsertWallet(ctx context.Context, wallet *entity.Wallet) (*enti
 	// if wallet exist, postgre returns not found, so we handle this by querying the wallet
 	if err == sdkpostgre.ErrNotFound {
 		var r *entity.Wallet
-		r, err = w.getUserActiveWalletByUserIDAndCurrency(ctx, wallet.UserID, wallet.Currency)
+		r, err = w.getActiveWalletByUserIDAndCurrency(ctx, wallet.UserID, wallet.Currency)
 		if err != nil {
 			return nil, err
 		}
@@ -62,47 +62,47 @@ func (w *Wallet) InsertWallet(ctx context.Context, wallet *entity.Wallet) (*enti
 	return convertDBWalletToEntityWallet(res), nil
 }
 
-func (w *Wallet) getUserActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*entity.Wallet, error) {
-	res, err := w.queries.GetUserActiveWalletByUserIdAndCurrency(ctx, db.GetUserActiveWalletByUserIdAndCurrencyParams{
+func (w *Wallet) getActiveWalletByUserIDAndCurrency(ctx context.Context, userID uuid.UUID, currency string) (*entity.Wallet, error) {
+	res, err := w.queries.GetActiveWalletByUserIdAndCurrency(ctx, db.GetActiveWalletByUserIdAndCurrencyParams{
 		UserID:   userID,
 		Currency: currency,
 	})
 
 	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrEmptyWallet
+		return nil, entity.ErrWalletNotFound
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-GetUserActiveWalletByUserIdAndCurrency] internal error", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-GetActiveWalletByUserIdAndCurrency] internal error", "error", err)
 		return nil, entity.ErrInternal
 	}
 	return convertDBWalletToEntityWallet(res), nil
 }
 
-// GetUserWalletByIDAndUserID gets an active wallet.
-func (w *Wallet) GetUserWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error) {
-	res, err := w.queries.GetUserWalletByIDAndUserID(ctx, db.GetUserWalletByIDAndUserIDParams{
+// GetActiveWalletByIDAndUserID gets an active wallet.
+func (w *Wallet) GetActiveWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error) {
+	res, err := w.queries.GetActiveWalletByIDAndUserID(ctx, db.GetActiveWalletByIDAndUserIDParams{
 		ID:     id,
 		UserID: userID,
 	})
 
 	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrNilWallet
+		return nil, entity.ErrWalletNotFound
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-GetUserWalletByIDAndUserID] internal error", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-GetActiveWalletByIDAndUserID] internal error", "error", err)
 		return nil, entity.ErrInternal
 	}
 	return convertDBWalletToEntityWallet(res), nil
 }
 
-// GetCustomerByUserID gets a customer by user id.
-func (w *Wallet) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
-	res, err := w.queries.GetCustomerByUserID(ctx, userID)
+// GetActiveCustomerByUserID gets a customer by user id.
+func (w *Wallet) GetActiveCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
+	res, err := w.queries.GetActiveCustomerByUserID(ctx, userID)
 	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrNilCustomer
+		return nil, entity.ErrCustomerNotFound
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-GetCustomerByUserID] fail get customer", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-GetActiveCustomerByUserID] fail get customer", "error", err)
 		return nil, entity.ErrInternal
 	}
 	return convertDBCustomerToEntityCustomer(res), nil
@@ -112,7 +112,7 @@ func (w *Wallet) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*en
 // If same data exists (by user_id), it will just return the record without insert or update.
 func (w *Wallet) InsertCustomer(ctx context.Context, customer *entity.Customer) (*entity.Customer, error) {
 	if customer == nil {
-		return nil, entity.ErrNilCustomer
+		return nil, entity.ErrCustomerEmpty
 	}
 
 	param := db.InsertCustomerParams{
@@ -129,7 +129,7 @@ func (w *Wallet) InsertCustomer(ctx context.Context, customer *entity.Customer) 
 	// if customer exist, postgre returns not found, so we handle this by querying the customer
 	if err == sdkpostgre.ErrNotFound {
 		var c *entity.Customer
-		c, err = w.GetCustomerByUserID(ctx, customer.UserID)
+		c, err = w.GetActiveCustomerByUserID(ctx, customer.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +145,7 @@ func (w *Wallet) InsertCustomer(ctx context.Context, customer *entity.Customer) 
 // InsertTransaction inserts a new transaction.
 func (w *Wallet) InsertTransaction(ctx context.Context, transaction *entity.Transaction) (*entity.Transaction, error) {
 	if transaction == nil {
-		return nil, entity.ErrNilTransaction
+		return nil, entity.ErrTransactionEmpty
 	}
 
 	param := db.InsertTransactionParams{
@@ -171,33 +171,33 @@ func (w *Wallet) InsertTransaction(ctx context.Context, transaction *entity.Tran
 	return convertDBTransactionToEntityTransaction(trx), nil
 }
 
-// GetPendingTransactionByIdempotencyKey gets a pending transaction.
-func (w *Wallet) GetPendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error) {
-	res, err := w.queries.GetPendingTransactionByIdempotencyKey(ctx, key)
+// GetActivePendingTransactionByIdempotencyKey gets a pending transaction.
+func (w *Wallet) GetActivePendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error) {
+	res, err := w.queries.GetActivePendingTransactionByIdempotencyKey(ctx, key)
 	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrNilTransaction
+		return nil, entity.ErrTransactionNotFound
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-GetPendingTransactionByIdempotencyKey] fail get transaction", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-GetActivePendingTransactionByIdempotencyKey] fail get transaction", "error", err)
 		return nil, entity.ErrInternal
 	}
 	return convertDBTransactionToEntityTransaction(res), nil
 }
 
-// UpdateTransactionToCompletedByCheckoutSessionID updates a pending transaction to completed.
-func (w *Wallet) UpdateTransactionToCompletedByCheckoutSessionID(ctx context.Context, id string) error {
-	param := db.UpdateTransactionToCompletedByCheckoutSessionIDParams{
+// UpdateActiveTransactionToCompletedByCheckoutSessionID updates a pending transaction to completed.
+func (w *Wallet) UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx context.Context, id string) error {
+	param := db.UpdateActiveTransactionToCompletedByCheckoutSessionIDParams{
 		CheckoutSessionID: &id,
 		UpdatedAt:         time.Now().UTC(),
 		UpdatedBy:         systemUser,
 	}
 
-	_, err := w.queries.UpdateTransactionToCompletedByCheckoutSessionID(ctx, param)
+	_, err := w.queries.UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx, param)
 	if err == sdkpostgre.ErrNotFound {
-		return entity.ErrNilTransaction
+		return entity.ErrTransactionNotFound
 	}
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-UpdateTransactionToCompletedByCheckoutSessionID] fail update transaction", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-UpdateActiveTransactionToCompletedByCheckoutSessionID] fail update transaction", "error", err)
 		return entity.ErrInternal
 	}
 	return nil
@@ -207,7 +207,7 @@ func (w *Wallet) UpdateTransactionToCompletedByCheckoutSessionID(ctx context.Con
 func (w *Wallet) GetActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Context, sessionID string) (*entity.Transaction, error) {
 	res, err := w.queries.GetActiveTransactionByCheckoutSessionIDForUpdate(ctx, &sessionID)
 	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrNilTransaction
+		return nil, entity.ErrTransactionNotFound
 	}
 	if err != nil {
 		slog.ErrorContext(ctx, "[PostgreWallet-GetActiveTransactionByCheckoutSessionIDForUpdate] fail get transaction", "error", err)
@@ -220,7 +220,7 @@ func (w *Wallet) GetActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Co
 func (w *Wallet) GetActiveWalletByIDForUpdate(ctx context.Context, id uuid.UUID) (*entity.Wallet, error) {
 	res, err := w.queries.GetActiveWalletByIDForUpdate(ctx, id)
 	if err == sdkpostgre.ErrNotFound {
-		return nil, entity.ErrNilWallet
+		return nil, entity.ErrWalletNotFound
 	}
 	if err != nil {
 		slog.ErrorContext(ctx, "[PostgreWallet-GetActiveWalletByIDForUpdate] fail get wallet", "error", err)

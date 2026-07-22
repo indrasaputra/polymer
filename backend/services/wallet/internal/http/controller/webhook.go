@@ -41,13 +41,13 @@ func (w *Webhook) Stripe(c *echo.Context) error {
 	payload, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		slog.ErrorContext(c.Request().Context(), "[WebhookController-Stripe] fail read payload")
-		return dto.SendResponse(c, nil, entity.ErrBadRequest, 0)
+		return dto.SendResponse(c, nil, entity.ErrGeneralInvalid, 0)
 	}
 
 	header := c.Request().Header.Get(headerStripeSignature)
 	if strings.TrimSpace(header) == "" {
 		slog.ErrorContext(c.Request().Context(), "[WebhookController-Stripe] fail get header")
-		return dto.SendResponse(c, nil, entity.ErrBadRequest, 0)
+		return dto.SendResponse(c, nil, entity.ErrGeneralInvalid, 0)
 	}
 
 	event := &entity.StripeEvent{Payload: payload, Header: header}

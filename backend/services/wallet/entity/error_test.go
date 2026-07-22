@@ -25,107 +25,107 @@ func TestWalletError_Error(t *testing.T) {
 	})
 }
 
-func TestErrEmptyWallet(t *testing.T) {
+func TestErrWalletEmpty(t *testing.T) {
 	t.Run("empty wallet error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrEmptyWallet.Code)
-		assert.Equal(t, "Wallet is empty or nil", entity.ErrEmptyWallet.Error())
+		assert.Equal(t, http.StatusBadRequest, entity.ErrWalletEmpty.Code)
+		assert.Equal(t, "wallet is empty or nil", entity.ErrWalletEmpty.Error())
 	})
 }
 
-func TestErrInvalidUser(t *testing.T) {
-	t.Run("invalid user error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidUser.Code)
-		assert.Equal(t, "User is invalid", entity.ErrInvalidUser.Error())
+func TestErrUserEmpty(t *testing.T) {
+	t.Run("empty user error returns 400 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, entity.ErrUserEmpty.Code)
+		assert.Equal(t, "user is empty or nil", entity.ErrUserEmpty.Error())
 	})
 }
 
-func TestErrBadRequest(t *testing.T) {
-	t.Run("bad request returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrBadRequest.Code)
-		assert.Equal(t, "Bad request in body or param", entity.ErrBadRequest.Error())
+func TestErrGeneralInvalid(t *testing.T) {
+	t.Run("general invalid returns 400 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, entity.ErrGeneralInvalid.Code)
+		assert.Equal(t, "request, param, or instance's value is invalid", entity.ErrGeneralInvalid.Error())
 	})
 }
 
 func TestErrInternal(t *testing.T) {
 	t.Run("internal error returns 500 code", func(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, entity.ErrInternal.Code)
-		assert.Equal(t, "Internal error", entity.ErrInternal.Error())
+		assert.Equal(t, "internal error", entity.ErrInternal.Error())
 	})
 }
 
-func TestErrInvalidWallet(t *testing.T) {
-	t.Run("invalid wallet error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidWallet.Code)
-		assert.Equal(t, "Wallet is invalid", entity.ErrInvalidWallet.Error())
-	})
-}
-
-func TestErrInvalidIdempotencyKey(t *testing.T) {
+func TestErrIdempotencyKeyEmpty(t *testing.T) {
 	t.Run("invalid idempotency key error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidIdempotencyKey.Code)
-		assert.Equal(t, "Idempotency key is invalid", entity.ErrInvalidIdempotencyKey.Error())
+		assert.Equal(t, http.StatusBadRequest, entity.ErrIdempotencyKeyEmpty.Code)
+		assert.Equal(t, "idempotency key is empty or nil or not UUID", entity.ErrIdempotencyKeyEmpty.Error())
 	})
 }
 
-func TestErrInvalidTopupAmount(t *testing.T) {
+func TestErrTopupAmountInvalid(t *testing.T) {
 	t.Run("invalid topup amount error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidTopupAmount.Code)
-		assert.Equal(t, "Invalid topup amount", entity.ErrInvalidTopupAmount.Error())
+		assert.Equal(t, http.StatusBadRequest, entity.ErrTopupAmountInvalid.Code)
+		assert.Equal(t, "topup amount is invalid", entity.ErrTopupAmountInvalid.Error())
 	})
 }
 
-func TestErrInvalidCurrency(t *testing.T) {
+func TestErrCurrencyInvalid(t *testing.T) {
 	t.Run("invalid currency error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidCurrency.Code)
-		assert.Equal(t, "Invalid currency", entity.ErrInvalidCurrency.Error())
+		assert.Equal(t, http.StatusBadRequest, entity.ErrCurrencyInvalid.Code)
+		assert.Equal(t, "currency is invalid", entity.ErrCurrencyInvalid.Error())
 	})
 }
 
-func TestErrNilCustomer(t *testing.T) {
+func TestErrCustomerNotFound(t *testing.T) {
 	t.Run("nil customer error returns 404 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusNotFound, entity.ErrNilCustomer.Code)
-		assert.Equal(t, "Customer not found", entity.ErrNilCustomer.Error())
+		assert.Equal(t, http.StatusNotFound, entity.ErrCustomerNotFound.Code)
+		assert.Equal(t, "customer not found", entity.ErrCustomerNotFound.Error())
 	})
 }
 
-func TestErrNilTransaction(t *testing.T) {
+func TestErrCustomerEmpty(t *testing.T) {
+	t.Run("empty customer error returns 400 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, entity.ErrCustomerEmpty.Code)
+		assert.Equal(t, "customer is empty or nil", entity.ErrCustomerEmpty.Error())
+	})
+}
+
+func TestErrTransactionNotFound(t *testing.T) {
 	t.Run("nil transaction error returns 404 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusNotFound, entity.ErrNilTransaction.Code)
-		assert.Equal(t, "Transaction not found", entity.ErrNilTransaction.Error())
+		assert.Equal(t, http.StatusNotFound, entity.ErrTransactionNotFound.Code)
+		assert.Equal(t, "transaction not found", entity.ErrTransactionNotFound.Error())
 	})
 }
 
-func TestErrNilWallet(t *testing.T) {
+func TestErrTransactionEmpty(t *testing.T) {
+	t.Run("empty transaction error returns 400 code", func(t *testing.T) {
+		assert.Equal(t, http.StatusBadRequest, entity.ErrTransactionEmpty.Code)
+		assert.Equal(t, "transaction is empty or nil", entity.ErrTransactionEmpty.Error())
+	})
+}
+
+func TestErrWalletNotFound(t *testing.T) {
 	t.Run("nil wallet error returns 404 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusNotFound, entity.ErrNilWallet.Code)
-		assert.Equal(t, "Wallet not found", entity.ErrNilWallet.Error())
+		assert.Equal(t, http.StatusNotFound, entity.ErrWalletNotFound.Code)
+		assert.Equal(t, "wallet not found", entity.ErrWalletNotFound.Error())
 	})
 }
 
-func TestErrEmptyInput(t *testing.T) {
-	t.Run("empty input error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrEmptyInput.Code)
-		assert.Equal(t, "Input is empty", entity.ErrEmptyInput.Error())
-	})
-}
-
-func TestErrEmptyTopup(t *testing.T) {
+func TestErrTopupEmpty(t *testing.T) {
 	t.Run("empty topup error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrEmptyTopup.Code)
-		assert.Equal(t, "Empty topup", entity.ErrEmptyTopup.Error())
+		assert.Equal(t, http.StatusBadRequest, entity.ErrTopupEmpty.Code)
+		assert.Equal(t, "topup is empty or nil", entity.ErrTopupEmpty.Error())
 	})
 }
 
-func TestErrInvalidStripeEvent(t *testing.T) {
+func TestErrStripeEventInvalid(t *testing.T) {
 	t.Run("invalid stripe event error returns 400 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusBadRequest, entity.ErrInvalidStripeEvent.Code)
-		assert.Equal(t, "Invalid Stripe event", entity.ErrInvalidStripeEvent.Error())
+		assert.Equal(t, http.StatusBadRequest, entity.ErrStripeEventInvalid.Code)
+		assert.Equal(t, "stripe event is invalid", entity.ErrStripeEventInvalid.Error())
 	})
 }
 
-func TestErrInvalidTransaction(t *testing.T) {
+func TestErrTransactionUnprocessable(t *testing.T) {
 	t.Run("invalid transaction error returns 422 code", func(t *testing.T) {
-		assert.Equal(t, http.StatusUnprocessableEntity, entity.ErrInvalidTransaction.Code)
-		assert.Equal(t, "Transaction is unprocessable", entity.ErrInvalidTransaction.Error())
+		assert.Equal(t, http.StatusUnprocessableEntity, entity.ErrTransactionUnprocessable.Code)
+		assert.Equal(t, "transaction is unprocessable", entity.ErrTransactionUnprocessable.Error())
 	})
 }

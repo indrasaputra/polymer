@@ -7,12 +7,12 @@ RETURNING *;
 -- name: GetActiveWalletByIDForUpdate :one
 SELECT * FROM wallets WHERE id = $1 AND deleted_at IS NULL LIMIT 1 FOR NO KEY UPDATE; --noqa
 
--- name: GetUserActiveWalletByUserIdAndCurrency :one
+-- name: GetActiveWalletByUserIdAndCurrency :one
 SELECT * FROM wallets
 WHERE user_id = $1 AND currency = $2 AND deleted_at IS NULL
 LIMIT 1;
 
--- name: GetUserWalletByIDAndUserID :one
+-- name: GetActiveWalletByIDAndUserID :one
 SELECT * FROM wallets
 WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
 LIMIT 1;
@@ -27,7 +27,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7)
 ON CONFLICT (user_id) WHERE deleted_at IS NULL DO NOTHING
 RETURNING *;
 
--- name: GetCustomerByUserID :one
+-- name: GetActiveCustomerByUserID :one
 SELECT * FROM customers
 WHERE user_id = $1 AND deleted_at IS NULL
 LIMIT 1;
@@ -37,12 +37,12 @@ INSERT INTO transactions (id, user_id, type, status, idempotency_key, amount, cu
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING *;
 
--- name: GetPendingTransactionByIdempotencyKey :one
+-- name: GetActivePendingTransactionByIdempotencyKey :one
 SELECT * FROM transactions
 WHERE idempotency_key = $1 AND status = 'pending' AND deleted_at IS NULL
 LIMIT 1;
 
--- name: UpdateTransactionToCompletedByCheckoutSessionID :one
+-- name: UpdateActiveTransactionToCompletedByCheckoutSessionID :one
 UPDATE transactions
 SET status = 'completed', updated_at = $1, updated_by = $2
 WHERE checkout_session_id = $3 AND deleted_at IS NULL

@@ -13,9 +13,6 @@ CREATE TABLE IF NOT EXISTS wallets (
     CONSTRAINT non_negative_balance CHECK (balance >= 0)
 );
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_wallets_id_user_id
-ON wallets USING btree (id, user_id);
-
 CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_wallets_user_id_currency
 ON wallets USING btree (user_id, currency)
 WHERE deleted_at IS NULL;
@@ -61,5 +58,6 @@ CREATE TABLE IF NOT EXISTS transactions (
     deleted_by UUID
 );
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transactions_user_id_status
-ON transactions USING btree (user_id, status);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_transactions_checkout_session_id
+ON transactions (checkout_session_id)
+WHERE checkout_session_id IS NOT NULL AND deleted_at IS NULL;

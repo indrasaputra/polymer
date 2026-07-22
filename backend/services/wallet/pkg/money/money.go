@@ -20,7 +20,7 @@ var (
 func ToSubunits(amount decimal.Decimal, currencyCode string) (int64, error) {
 	digit, ok := currency.GetDigits(currencyCode)
 	if !ok {
-		return 0, entity.ErrInvalidCurrency
+		return 0, entity.ErrCurrencyInvalid
 	}
 
 	su := amount.Mul(decimalTen.Pow(decimal.NewFromInt32(int32(digit)))).IntPart()

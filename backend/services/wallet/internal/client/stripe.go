@@ -53,7 +53,7 @@ func (s *Stripe) CreateCheckoutSession(ctx context.Context, input *entity.Checko
 	amount, err := money.ToSubunits(input.Amount, input.Currency)
 	if err != nil {
 		slog.ErrorContext(ctx, "[Stripe-CreateCheckoutSessionURL] fail convert to subunits", "error", err)
-		return nil, entity.ErrBadRequest
+		return nil, entity.ErrGeneralInvalid
 	}
 
 	param := &stripe.CheckoutSessionCreateParams{
@@ -90,7 +90,7 @@ func (s *Stripe) ConstructEvent(ctx context.Context, payload []byte, header stri
 	event, err := s.client.ConstructEvent(payload, header, s.webhookSecret)
 	if err != nil {
 		slog.ErrorContext(ctx, "[Stripe-ConstructEvent] fail construct event", "error", err)
-		return nil, entity.ErrInvalidStripeEvent
+		return nil, entity.ErrStripeEventInvalid
 	}
 	return &event, nil
 }

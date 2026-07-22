@@ -135,12 +135,12 @@ func (_m *MockTopupWalletRepository) EXPECT() *MockTopupWalletRepository_Expecte
 	return &MockTopupWalletRepository_Expecter{mock: &_m.Mock}
 }
 
-// GetCustomerByUserID provides a mock function for the type MockTopupWalletRepository
-func (_mock *MockTopupWalletRepository) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
+// GetActiveCustomerByUserID provides a mock function for the type MockTopupWalletRepository
+func (_mock *MockTopupWalletRepository) GetActiveCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
 	ret := _mock.Called(ctx, userID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetCustomerByUserID")
+		panic("no return value specified for GetActiveCustomerByUserID")
 	}
 
 	var r0 *entity.Customer
@@ -163,19 +163,19 @@ func (_mock *MockTopupWalletRepository) GetCustomerByUserID(ctx context.Context,
 	return r0, r1
 }
 
-// MockTopupWalletRepository_GetCustomerByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCustomerByUserID'
-type MockTopupWalletRepository_GetCustomerByUserID_Call struct {
+// MockTopupWalletRepository_GetActiveCustomerByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetActiveCustomerByUserID'
+type MockTopupWalletRepository_GetActiveCustomerByUserID_Call struct {
 	*mock.Call
 }
 
-// GetCustomerByUserID is a helper method to define mock.On call
+// GetActiveCustomerByUserID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID uuid.UUID
-func (_e *MockTopupWalletRepository_Expecter) GetCustomerByUserID(ctx any, userID any) *MockTopupWalletRepository_GetCustomerByUserID_Call {
-	return &MockTopupWalletRepository_GetCustomerByUserID_Call{Call: _e.mock.On("GetCustomerByUserID", ctx, userID)}
+func (_e *MockTopupWalletRepository_Expecter) GetActiveCustomerByUserID(ctx any, userID any) *MockTopupWalletRepository_GetActiveCustomerByUserID_Call {
+	return &MockTopupWalletRepository_GetActiveCustomerByUserID_Call{Call: _e.mock.On("GetActiveCustomerByUserID", ctx, userID)}
 }
 
-func (_c *MockTopupWalletRepository_GetCustomerByUserID_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *MockTopupWalletRepository_GetCustomerByUserID_Call {
+func (_c *MockTopupWalletRepository_GetActiveCustomerByUserID_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *MockTopupWalletRepository_GetActiveCustomerByUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -193,22 +193,22 @@ func (_c *MockTopupWalletRepository_GetCustomerByUserID_Call) Run(run func(ctx c
 	return _c
 }
 
-func (_c *MockTopupWalletRepository_GetCustomerByUserID_Call) Return(customer *entity.Customer, err error) *MockTopupWalletRepository_GetCustomerByUserID_Call {
+func (_c *MockTopupWalletRepository_GetActiveCustomerByUserID_Call) Return(customer *entity.Customer, err error) *MockTopupWalletRepository_GetActiveCustomerByUserID_Call {
 	_c.Call.Return(customer, err)
 	return _c
 }
 
-func (_c *MockTopupWalletRepository_GetCustomerByUserID_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)) *MockTopupWalletRepository_GetCustomerByUserID_Call {
+func (_c *MockTopupWalletRepository_GetActiveCustomerByUserID_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)) *MockTopupWalletRepository_GetActiveCustomerByUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetPendingTransactionByIdempotencyKey provides a mock function for the type MockTopupWalletRepository
-func (_mock *MockTopupWalletRepository) GetPendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error) {
+// GetActivePendingTransactionByIdempotencyKey provides a mock function for the type MockTopupWalletRepository
+func (_mock *MockTopupWalletRepository) GetActivePendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error) {
 	ret := _mock.Called(ctx, key)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetPendingTransactionByIdempotencyKey")
+		panic("no return value specified for GetActivePendingTransactionByIdempotencyKey")
 	}
 
 	var r0 *entity.Transaction
@@ -231,19 +231,19 @@ func (_mock *MockTopupWalletRepository) GetPendingTransactionByIdempotencyKey(ct
 	return r0, r1
 }
 
-// MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPendingTransactionByIdempotencyKey'
-type MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call struct {
+// MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetActivePendingTransactionByIdempotencyKey'
+type MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call struct {
 	*mock.Call
 }
 
-// GetPendingTransactionByIdempotencyKey is a helper method to define mock.On call
+// GetActivePendingTransactionByIdempotencyKey is a helper method to define mock.On call
 //   - ctx context.Context
 //   - key uuid.UUID
-func (_e *MockTopupWalletRepository_Expecter) GetPendingTransactionByIdempotencyKey(ctx any, key any) *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call {
-	return &MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call{Call: _e.mock.On("GetPendingTransactionByIdempotencyKey", ctx, key)}
+func (_e *MockTopupWalletRepository_Expecter) GetActivePendingTransactionByIdempotencyKey(ctx any, key any) *MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call {
+	return &MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call{Call: _e.mock.On("GetActivePendingTransactionByIdempotencyKey", ctx, key)}
 }
 
-func (_c *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call) Run(run func(ctx context.Context, key uuid.UUID)) *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call {
+func (_c *MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call) Run(run func(ctx context.Context, key uuid.UUID)) *MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -261,22 +261,22 @@ func (_c *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call) 
 	return _c
 }
 
-func (_c *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call) Return(transaction *entity.Transaction, err error) *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call {
+func (_c *MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call) Return(transaction *entity.Transaction, err error) *MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call {
 	_c.Call.Return(transaction, err)
 	return _c
 }
 
-func (_c *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call) RunAndReturn(run func(ctx context.Context, key uuid.UUID) (*entity.Transaction, error)) *MockTopupWalletRepository_GetPendingTransactionByIdempotencyKey_Call {
+func (_c *MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call) RunAndReturn(run func(ctx context.Context, key uuid.UUID) (*entity.Transaction, error)) *MockTopupWalletRepository_GetActivePendingTransactionByIdempotencyKey_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
-// GetUserWalletByIDAndUserID provides a mock function for the type MockTopupWalletRepository
-func (_mock *MockTopupWalletRepository) GetUserWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error) {
+// GetActiveWalletByIDAndUserID provides a mock function for the type MockTopupWalletRepository
+func (_mock *MockTopupWalletRepository) GetActiveWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error) {
 	ret := _mock.Called(ctx, id, userID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetUserWalletByIDAndUserID")
+		panic("no return value specified for GetActiveWalletByIDAndUserID")
 	}
 
 	var r0 *entity.Wallet
@@ -299,20 +299,20 @@ func (_mock *MockTopupWalletRepository) GetUserWalletByIDAndUserID(ctx context.C
 	return r0, r1
 }
 
-// MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUserWalletByIDAndUserID'
-type MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call struct {
+// MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetActiveWalletByIDAndUserID'
+type MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call struct {
 	*mock.Call
 }
 
-// GetUserWalletByIDAndUserID is a helper method to define mock.On call
+// GetActiveWalletByIDAndUserID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
 //   - userID uuid.UUID
-func (_e *MockTopupWalletRepository_Expecter) GetUserWalletByIDAndUserID(ctx any, id any, userID any) *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call {
-	return &MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call{Call: _e.mock.On("GetUserWalletByIDAndUserID", ctx, id, userID)}
+func (_e *MockTopupWalletRepository_Expecter) GetActiveWalletByIDAndUserID(ctx any, id any, userID any) *MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call {
+	return &MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call{Call: _e.mock.On("GetActiveWalletByIDAndUserID", ctx, id, userID)}
 }
 
-func (_c *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call) Run(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID)) *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call {
+func (_c *MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call) Run(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID)) *MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -335,12 +335,12 @@ func (_c *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call) Run(run fun
 	return _c
 }
 
-func (_c *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call) Return(wallet *entity.Wallet, err error) *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call {
+func (_c *MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call) Return(wallet *entity.Wallet, err error) *MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call {
 	_c.Call.Return(wallet, err)
 	return _c
 }
 
-func (_c *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error)) *MockTopupWalletRepository_GetUserWalletByIDAndUserID_Call {
+func (_c *MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error)) *MockTopupWalletRepository_GetActiveWalletByIDAndUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }

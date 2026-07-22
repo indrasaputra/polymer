@@ -3,40 +3,46 @@ package entity
 import "net/http"
 
 var (
-	// ErrEmptyWallet occurs when wallet is nil or empty.
-	ErrEmptyWallet = NewWalletError(http.StatusBadRequest, "Wallet is empty or nil")
-	// ErrInvalidUser occurs when user is invalid.
-	ErrInvalidUser = NewWalletError(http.StatusBadRequest, "User is invalid")
-	// ErrInvalidWallet occurs when wallet is invalid.
-	ErrInvalidWallet = NewWalletError(http.StatusBadRequest, "Wallet is invalid")
-	// ErrInvalidIdempotencyKey occurs when idempotency key is invalid.
-	ErrInvalidIdempotencyKey = NewWalletError(http.StatusBadRequest, "Idempotency key is invalid")
-	// ErrInvalidTopupAmount occurs when topup amount is invalid (less than or equal to zero).
-	ErrInvalidTopupAmount = NewWalletError(http.StatusBadRequest, "Invalid topup amount")
-	// ErrInvalidCurrency occurs when currency is invalid.
+	// ErrWalletEmpty occurs when wallet instance is empty or nil.
+	ErrWalletEmpty = NewWalletError(http.StatusBadRequest, "wallet is empty or nil")
+	// ErrWalletNotFound occurs when wallet is not found.
+	ErrWalletNotFound = NewWalletError(http.StatusNotFound, "wallet not found")
+
+	// ErrTransactionEmpty occurs when transaction instance is empty or nil.
+	ErrTransactionEmpty = NewWalletError(http.StatusBadRequest, "transaction is empty or nil")
+	// ErrTransactionNotFound occurs when transaction is not found.
+	ErrTransactionNotFound = NewWalletError(http.StatusNotFound, "transaction not found")
+	// ErrTransactionUnprocessable occurs when transaction can't be processed further.
+	ErrTransactionUnprocessable = NewWalletError(http.StatusUnprocessableEntity, "transaction is unprocessable")
+
+	// ErrCustomerEmpty occurs when customer instance is empty or nil.
+	ErrCustomerEmpty = NewWalletError(http.StatusBadRequest, "customer is empty or nil")
+	// ErrCustomerNotFound occurs when customer is not found.
+	ErrCustomerNotFound = NewWalletError(http.StatusNotFound, "customer not found")
+
+	// ErrTopupEmpty occurs when topup is empty or nil.
+	ErrTopupEmpty = NewWalletError(http.StatusBadRequest, "topup is empty or nil")
+	// ErrTopupAmountInvalid occurs when topup amount is invalid (less than or equal to zero).
+	ErrTopupAmountInvalid = NewWalletError(http.StatusBadRequest, "topup amount is invalid")
+
+	// ErrIdempotencyKeyEmpty occurs when idempotency key is empty, nil, or not uuid.
+	ErrIdempotencyKeyEmpty = NewWalletError(http.StatusBadRequest, "idempotency key is empty or nil or not UUID")
+
+	// ErrCurrencyInvalid occurs when currency is invalid.
 	// It uses https://github.com/bojanz/currency as source of truth.
-	ErrInvalidCurrency = NewWalletError(http.StatusBadRequest, "Invalid currency")
-	// ErrNilCustomer occurs when customer is not found.
-	ErrNilCustomer = NewWalletError(http.StatusNotFound, "Customer not found")
-	// ErrNilTransaction occurs when transaction is not found.
-	ErrNilTransaction = NewWalletError(http.StatusNotFound, "Transaction not found")
-	// ErrInvalidTransaction occurs when transaction can't be processed further.
-	ErrInvalidTransaction = NewWalletError(http.StatusUnprocessableEntity, "Transaction is unprocessable")
-	// ErrNilWallet occurs when wallet is not found.
-	ErrNilWallet = NewWalletError(http.StatusNotFound, "Wallet not found")
-	// ErrEmptyInput occurs when input is empty.
-	ErrEmptyInput = NewWalletError(http.StatusBadRequest, "Input is empty")
-	// ErrEmptyTopup occurs when topup is empty.
-	ErrEmptyTopup = NewWalletError(http.StatusBadRequest, "Empty topup")
+	ErrCurrencyInvalid = NewWalletError(http.StatusBadRequest, "currency is invalid")
 
-	// ErrInvalidStripeEvent occurs when Stripe event is invalid.
-	ErrInvalidStripeEvent = NewWalletError(http.StatusBadRequest, "Invalid Stripe event")
+	// ErrUserEmpty occurs when user is empty or nil.
+	ErrUserEmpty = NewWalletError(http.StatusBadRequest, "user is empty or nil")
 
-	// ErrBadRequest occurs when request is not as expected.
-	ErrBadRequest = NewWalletError(http.StatusBadRequest, "Bad request in body or param")
+	// ErrStripeEventInvalid occurs when Stripe event is invalid.
+	ErrStripeEventInvalid = NewWalletError(http.StatusBadRequest, "stripe event is invalid")
+
+	// ErrGeneralInvalid occurs when request or param is not as expected.
+	ErrGeneralInvalid = NewWalletError(http.StatusBadRequest, "request, param, or instance's value is invalid")
 
 	// ErrInternal occurs for any unknown or when server crashes.
-	ErrInternal = NewWalletError(http.StatusInternalServerError, "Internal error")
+	ErrInternal = NewWalletError(http.StatusInternalServerError, "internal error")
 )
 
 // WalletError represents wallet-related error.

@@ -14,8 +14,8 @@ import (
 
 // HandleStripeEventRepository defines the interface for transaction-related table.
 type HandleStripeEventRepository interface {
-	// UpdateTransactionToCompletedByCheckoutSessionID updates the pending transaction to completed.
-	UpdateTransactionToCompletedByCheckoutSessionID(ctx context.Context, sessionID string) error
+	// UpdateActiveTransactionToCompletedByCheckoutSessionID updates the pending transaction to completed.
+	UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx context.Context, sessionID string) error
 	// GetActiveTransactionByCheckoutSessionIDForUpdate gets an active transaction by checkout session ID.
 	GetActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Context, sessionID string) (*entity.Transaction, error)
 	// GetActiveUserWalletByIDForUpdate gets active user's wallet by ID.
@@ -49,9 +49,9 @@ func (s *StripeEventHandler) HandleCheckoutSessionCompleted(ctx context.Context,
 
 func (s *StripeEventHandler) getActiveWalletByIDForUpdate(ctx context.Context, id uuid.UUID) (*entity.Wallet, error) {
 	wallet, err := s.repo.GetActiveWalletByIDForUpdate(ctx, id)
-	if err == entity.ErrNilWallet {
+	if err == entity.ErrWalletNotFound {
 		slog.ErrorContext(ctx, "[StripeEventHandler-getActiveUserWalletForUpdate] wallet not found", "error", err)
-		return nil, entity.ErrNilWallet
+		return nil, entity.ErrWalletNotFound
 	}
 	if err != nil {
 		slog.ErrorContext(ctx, "[StripeEventHandler-getActiveUserWalletForUpdate] fail get wallet", "error", err)
@@ -62,9 +62,9 @@ func (s *StripeEventHandler) getActiveWalletByIDForUpdate(ctx context.Context, i
 
 func (s *StripeEventHandler) getActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Context, sessionID string) (*entity.Transaction, error) {
 	trx, err := s.repo.GetActiveTransactionByCheckoutSessionIDForUpdate(ctx, sessionID)
-	if err == entity.ErrNilTransaction {
+	if err == entity.ErrTransactionNotFound {
 		slog.ErrorContext(ctx, "[StripeEventHandler-getActiveTransactionByCheckoutSessionIDForUpdate] transaction not found", "error", err)
-		return nil, entity.ErrNilTransaction
+		return nil, entity.ErrTransactionNotFound
 	}
 	if err != nil {
 		slog.ErrorContext(ctx, "[StripeEventHandler-getActiveTransactionByCheckoutSessionIDForUpdate] fail get transaction", "error", err)
@@ -87,7 +87,7 @@ func (s *StripeEventHandler) updatePendingTransactionToCompleted(ctx context.Con
 	err := s.txManager.Do(ctx, func(ctx context.Context) error {
 		id, err := uuid.Parse(session.ClientReferenceID)
 		if err != nil {
-			return entity.ErrBadRequest
+			return entity.ErrGeneralInvalid
 		}
 
 		wallet, err := s.getActiveWalletByIDForUpdate(ctx, id)
@@ -104,10 +104,10 @@ func (s *StripeEventHandler) updatePendingTransactionToCompleted(ctx context.Con
 			return nil
 		}
 		if trx.Status != entity.TransactionStatusPending {
-			return entity.ErrInvalidTransaction
+			return entity.ErrTransactionUnprocessable
 		}
 
-		err = s.repo.UpdateTransactionToCompletedByCheckoutSessionID(ctx, session.ID)
+		err = s.repo.UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx, session.ID)
 		if err != nil {
 			slog.ErrorContext(ctx, "[StripeEventHandler-updatePendingTransactionToCompleted] fail update transaction", "error", err)
 			return entity.ErrInternal

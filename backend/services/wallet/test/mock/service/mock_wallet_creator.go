@@ -135,12 +135,12 @@ func (_m *MockCreateWalletRepository) EXPECT() *MockCreateWalletRepository_Expec
 	return &MockCreateWalletRepository_Expecter{mock: &_m.Mock}
 }
 
-// GetCustomerByUserID provides a mock function for the type MockCreateWalletRepository
-func (_mock *MockCreateWalletRepository) GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
+// GetActiveCustomerByUserID provides a mock function for the type MockCreateWalletRepository
+func (_mock *MockCreateWalletRepository) GetActiveCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error) {
 	ret := _mock.Called(ctx, userID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetCustomerByUserID")
+		panic("no return value specified for GetActiveCustomerByUserID")
 	}
 
 	var r0 *entity.Customer
@@ -163,19 +163,19 @@ func (_mock *MockCreateWalletRepository) GetCustomerByUserID(ctx context.Context
 	return r0, r1
 }
 
-// MockCreateWalletRepository_GetCustomerByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCustomerByUserID'
-type MockCreateWalletRepository_GetCustomerByUserID_Call struct {
+// MockCreateWalletRepository_GetActiveCustomerByUserID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetActiveCustomerByUserID'
+type MockCreateWalletRepository_GetActiveCustomerByUserID_Call struct {
 	*mock.Call
 }
 
-// GetCustomerByUserID is a helper method to define mock.On call
+// GetActiveCustomerByUserID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - userID uuid.UUID
-func (_e *MockCreateWalletRepository_Expecter) GetCustomerByUserID(ctx any, userID any) *MockCreateWalletRepository_GetCustomerByUserID_Call {
-	return &MockCreateWalletRepository_GetCustomerByUserID_Call{Call: _e.mock.On("GetCustomerByUserID", ctx, userID)}
+func (_e *MockCreateWalletRepository_Expecter) GetActiveCustomerByUserID(ctx any, userID any) *MockCreateWalletRepository_GetActiveCustomerByUserID_Call {
+	return &MockCreateWalletRepository_GetActiveCustomerByUserID_Call{Call: _e.mock.On("GetActiveCustomerByUserID", ctx, userID)}
 }
 
-func (_c *MockCreateWalletRepository_GetCustomerByUserID_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *MockCreateWalletRepository_GetCustomerByUserID_Call {
+func (_c *MockCreateWalletRepository_GetActiveCustomerByUserID_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *MockCreateWalletRepository_GetActiveCustomerByUserID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -193,12 +193,12 @@ func (_c *MockCreateWalletRepository_GetCustomerByUserID_Call) Run(run func(ctx 
 	return _c
 }
 
-func (_c *MockCreateWalletRepository_GetCustomerByUserID_Call) Return(customer *entity.Customer, err error) *MockCreateWalletRepository_GetCustomerByUserID_Call {
+func (_c *MockCreateWalletRepository_GetActiveCustomerByUserID_Call) Return(customer *entity.Customer, err error) *MockCreateWalletRepository_GetActiveCustomerByUserID_Call {
 	_c.Call.Return(customer, err)
 	return _c
 }
 
-func (_c *MockCreateWalletRepository_GetCustomerByUserID_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)) *MockCreateWalletRepository_GetCustomerByUserID_Call {
+func (_c *MockCreateWalletRepository_GetActiveCustomerByUserID_Call) RunAndReturn(run func(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)) *MockCreateWalletRepository_GetActiveCustomerByUserID_Call {
 	_c.Call.Return(run)
 	return _c
 }

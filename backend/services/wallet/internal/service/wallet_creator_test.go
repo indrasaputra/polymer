@@ -47,7 +47,7 @@ func TestWalletCreator_Create(t *testing.T) {
 		res, err := st.walletService.Create(testCtx, nil)
 
 		assert.Error(t, err)
-		assert.Equal(t, entity.ErrEmptyWallet, err)
+		assert.Equal(t, entity.ErrWalletEmpty, err)
 		assert.Nil(t, res)
 	})
 
@@ -76,7 +76,7 @@ func TestWalletCreator_Create(t *testing.T) {
 	t.Run("get customer returns error", func(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, assert.AnError)
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).Return(nil, assert.AnError)
 
 		res, err := st.walletService.Create(testCtx, input)
 
@@ -87,7 +87,7 @@ func TestWalletCreator_Create(t *testing.T) {
 	t.Run("create customer client returns error", func(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrCustomerNotFound)
 		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return("", assert.AnError)
 
 		res, err := st.walletService.Create(testCtx, input)
@@ -99,7 +99,7 @@ func TestWalletCreator_Create(t *testing.T) {
 	t.Run("insert customer returns error", func(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrCustomerNotFound)
 		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
 		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
 			return customer.StripeCustomerID == testCustomerID
@@ -119,7 +119,7 @@ func TestWalletCreator_Create(t *testing.T) {
 	t.Run("insert wallet returns error", func(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrCustomerNotFound)
 		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
 		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
 			return customer.StripeCustomerID == testCustomerID
@@ -143,7 +143,7 @@ func TestWalletCreator_Create(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
 		output := createWallet()
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrCustomerNotFound)
 		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
 		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
 			return customer.StripeCustomerID == testCustomerID
@@ -167,7 +167,7 @@ func TestWalletCreator_Create(t *testing.T) {
 		st := createWalletCreatorSuite(t)
 		input := createCreateWalletInput()
 		output := createWallet()
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrNilCustomer)
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).Return(nil, entity.ErrCustomerNotFound)
 		st.customerClient.EXPECT().CreateCustomer(testCtx, input.Email).Return(testCustomerID, nil)
 		st.walletRepo.EXPECT().InsertCustomer(testCtxTx, mock.MatchedBy(func(customer *entity.Customer) bool {
 			return customer.StripeCustomerID == testCustomerID
