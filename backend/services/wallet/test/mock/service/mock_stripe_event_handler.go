@@ -251,12 +251,12 @@ func (_c *MockHandleStripeEventRepository_GetActiveWalletByIDForUpdate_Call) Run
 	return _c
 }
 
-// UpdateTransactionToCompletedByCheckoutSessionID provides a mock function for the type MockHandleStripeEventRepository
-func (_mock *MockHandleStripeEventRepository) UpdateTransactionToCompletedByCheckoutSessionID(ctx context.Context, sessionID string) error {
+// UpdateActiveTransactionToCompletedByCheckoutSessionID provides a mock function for the type MockHandleStripeEventRepository
+func (_mock *MockHandleStripeEventRepository) UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx context.Context, sessionID string) error {
 	ret := _mock.Called(ctx, sessionID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateTransactionToCompletedByCheckoutSessionID")
+		panic("no return value specified for UpdateActiveTransactionToCompletedByCheckoutSessionID")
 	}
 
 	var r0 error
@@ -268,19 +268,19 @@ func (_mock *MockHandleStripeEventRepository) UpdateTransactionToCompletedByChec
 	return r0
 }
 
-// MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateTransactionToCompletedByCheckoutSessionID'
-type MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call struct {
+// MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateActiveTransactionToCompletedByCheckoutSessionID'
+type MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call struct {
 	*mock.Call
 }
 
-// UpdateTransactionToCompletedByCheckoutSessionID is a helper method to define mock.On call
+// UpdateActiveTransactionToCompletedByCheckoutSessionID is a helper method to define mock.On call
 //   - ctx context.Context
 //   - sessionID string
-func (_e *MockHandleStripeEventRepository_Expecter) UpdateTransactionToCompletedByCheckoutSessionID(ctx any, sessionID any) *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call {
-	return &MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call{Call: _e.mock.On("UpdateTransactionToCompletedByCheckoutSessionID", ctx, sessionID)}
+func (_e *MockHandleStripeEventRepository_Expecter) UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx any, sessionID any) *MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call {
+	return &MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call{Call: _e.mock.On("UpdateActiveTransactionToCompletedByCheckoutSessionID", ctx, sessionID)}
 }
 
-func (_c *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call) Run(run func(ctx context.Context, sessionID string)) *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call {
+func (_c *MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call) Run(run func(ctx context.Context, sessionID string)) *MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -298,12 +298,12 @@ func (_c *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckout
 	return _c
 }
 
-func (_c *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call) Return(err error) *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call {
+func (_c *MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call) Return(err error) *MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call {
 	_c.Call.Return(err)
 	return _c
 }
 
-func (_c *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call) RunAndReturn(run func(ctx context.Context, sessionID string) error) *MockHandleStripeEventRepository_UpdateTransactionToCompletedByCheckoutSessionID_Call {
+func (_c *MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call) RunAndReturn(run func(ctx context.Context, sessionID string) error) *MockHandleStripeEventRepository_UpdateActiveTransactionToCompletedByCheckoutSessionID_Call {
 	_c.Call.Return(run)
 	return _c
 }

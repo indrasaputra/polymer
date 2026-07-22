@@ -25,9 +25,9 @@ type CreateWalletRepository interface {
 	InsertWallet(ctx context.Context, wallet *entity.Wallet) (*entity.Wallet, error)
 	// InsertCustomer inserts a customer.
 	InsertCustomer(ctx context.Context, customer *entity.Customer) (*entity.Customer, error)
-	// GetCustomerByUserID gets a customer. I decided to put it in wallet repository because the usage is closely
+	// GetActiveCustomerByUserID gets a customer. I decided to put it in wallet repository because the usage is closely
 	// related with wallet case, not a separate flow.
-	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
+	GetActiveCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
 }
 
 // CreateCustomerClient defines the interface to create customer in 3rd party side.
@@ -87,7 +87,7 @@ func (wc *WalletCreator) Create(ctx context.Context, input *entity.CreateWalletI
 }
 
 func (wc *WalletCreator) getOrCreateCustomer(ctx context.Context, input *entity.CreateWalletInput) (*entity.Customer, error) {
-	customer, err := wc.walletRepo.GetCustomerByUserID(ctx, input.UserID)
+	customer, err := wc.walletRepo.GetActiveCustomerByUserID(ctx, input.UserID)
 	if err != nil && err != entity.ErrNilCustomer {
 		slog.ErrorContext(ctx, "[WalletCreator-getOrCreateCustomer] fail get customer", "error", err)
 		return nil, entity.ErrInternal

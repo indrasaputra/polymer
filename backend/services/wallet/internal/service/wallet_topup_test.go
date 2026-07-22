@@ -110,7 +110,7 @@ func TestWalletTopup_Topup(t *testing.T) {
 	t.Run("get pending transaction returns unexpected error", func(t *testing.T) {
 		st := createWalletTopupSuite(t)
 		input := createTopupWalletInput()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(nil, assert.AnError)
 
 		res, err := st.walletTopup.Topup(testCtx, input)
@@ -124,7 +124,7 @@ func TestWalletTopup_Topup(t *testing.T) {
 		st := createWalletTopupSuite(t)
 		input := createTopupWalletInput()
 		trx := createTestTransaction()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(trx, nil)
 		st.paymentClient.EXPECT().GetCheckoutSession(testCtx, *trx.CheckoutSessionID).
 			Return(nil, assert.AnError)
@@ -141,7 +141,7 @@ func TestWalletTopup_Topup(t *testing.T) {
 		input := createTopupWalletInput()
 		trx := createTestTransaction()
 		session := createCheckoutSession()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(trx, nil)
 		st.paymentClient.EXPECT().GetCheckoutSession(testCtx, *trx.CheckoutSessionID).
 			Return(session, nil)
@@ -156,9 +156,9 @@ func TestWalletTopup_Topup(t *testing.T) {
 	t.Run("get user wallet returns error", func(t *testing.T) {
 		st := createWalletTopupSuite(t)
 		input := createTopupWalletInput()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(nil, entity.ErrNilTransaction)
-		st.walletRepo.EXPECT().GetUserWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
+		st.walletRepo.EXPECT().GetActiveWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
 			Return(nil, assert.AnError)
 
 		res, err := st.walletTopup.Topup(testCtx, input)
@@ -171,11 +171,11 @@ func TestWalletTopup_Topup(t *testing.T) {
 		st := createWalletTopupSuite(t)
 		input := createTopupWalletInput()
 		wallet := createTestWalletForTopup()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(nil, entity.ErrNilTransaction)
-		st.walletRepo.EXPECT().GetUserWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
+		st.walletRepo.EXPECT().GetActiveWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
 			Return(wallet, nil)
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).
 			Return(nil, assert.AnError)
 
 		res, err := st.walletTopup.Topup(testCtx, input)
@@ -189,11 +189,11 @@ func TestWalletTopup_Topup(t *testing.T) {
 		input := createTopupWalletInput()
 		wallet := createTestWalletForTopup()
 		customer := createTestCustomerForTopup()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(nil, entity.ErrNilTransaction)
-		st.walletRepo.EXPECT().GetUserWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
+		st.walletRepo.EXPECT().GetActiveWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
 			Return(wallet, nil)
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).
 			Return(customer, nil)
 		st.paymentClient.EXPECT().CreateCheckoutSession(testCtx, mock.MatchedBy(func(ci *entity.CheckoutInput) bool {
 			return ci.WalletID == input.WalletID &&
@@ -214,11 +214,11 @@ func TestWalletTopup_Topup(t *testing.T) {
 		wallet := createTestWalletForTopup()
 		customer := createTestCustomerForTopup()
 		session := createCheckoutSession()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(nil, entity.ErrNilTransaction)
-		st.walletRepo.EXPECT().GetUserWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
+		st.walletRepo.EXPECT().GetActiveWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
 			Return(wallet, nil)
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).
 			Return(customer, nil)
 		st.paymentClient.EXPECT().CreateCheckoutSession(testCtx, mock.MatchedBy(func(ci *entity.CheckoutInput) bool {
 			return ci.WalletID == input.WalletID &&
@@ -249,11 +249,11 @@ func TestWalletTopup_Topup(t *testing.T) {
 		customer := createTestCustomerForTopup()
 		session := createCheckoutSession()
 		insertedTrx := createTestTransaction()
-		st.walletRepo.EXPECT().GetPendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
+		st.walletRepo.EXPECT().GetActivePendingTransactionByIdempotencyKey(testCtx, input.IdempotencyKey).
 			Return(nil, entity.ErrNilTransaction)
-		st.walletRepo.EXPECT().GetUserWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
+		st.walletRepo.EXPECT().GetActiveWalletByIDAndUserID(testCtx, input.WalletID, input.UserID).
 			Return(wallet, nil)
-		st.walletRepo.EXPECT().GetCustomerByUserID(testCtx, input.UserID).
+		st.walletRepo.EXPECT().GetActiveCustomerByUserID(testCtx, input.UserID).
 			Return(customer, nil)
 		st.paymentClient.EXPECT().CreateCheckoutSession(testCtx, mock.MatchedBy(func(ci *entity.CheckoutInput) bool {
 			return ci.WalletID == input.WalletID &&

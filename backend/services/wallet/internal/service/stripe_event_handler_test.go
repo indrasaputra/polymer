@@ -200,7 +200,7 @@ func TestStripeEventHandler_HandleCheckoutSessionCompleted(t *testing.T) {
 			Return(wallet, nil)
 		st.repo.EXPECT().GetActiveTransactionByCheckoutSessionIDForUpdate(testCtxTx, session.ID).
 			Return(trx, nil)
-		st.repo.EXPECT().UpdateTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
+		st.repo.EXPECT().UpdateActiveTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
 			Return(assert.AnError)
 		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
 			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {
@@ -225,7 +225,7 @@ func TestStripeEventHandler_HandleCheckoutSessionCompleted(t *testing.T) {
 			Return(wallet, nil)
 		st.repo.EXPECT().GetActiveTransactionByCheckoutSessionIDForUpdate(testCtxTx, session.ID).
 			Return(trx, nil)
-		st.repo.EXPECT().UpdateTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
+		st.repo.EXPECT().UpdateActiveTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
 			Return(nil)
 		st.repo.EXPECT().AddActiveWalletBalance(testCtxTx, wallet.ID, trx.Amount).
 			Return(nil, assert.AnError)
@@ -252,7 +252,7 @@ func TestStripeEventHandler_HandleCheckoutSessionCompleted(t *testing.T) {
 			Return(wallet, nil)
 		st.repo.EXPECT().GetActiveTransactionByCheckoutSessionIDForUpdate(testCtxTx, session.ID).
 			Return(trx, nil)
-		st.repo.EXPECT().UpdateTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
+		st.repo.EXPECT().UpdateActiveTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
 			Return(nil)
 		st.repo.EXPECT().AddActiveWalletBalance(testCtxTx, wallet.ID, trx.Amount).
 			Return(wallet, nil)
@@ -277,7 +277,7 @@ func TestStripeEventHandler_HandleCheckoutSessionCompleted(t *testing.T) {
 			Return(wallet, nil)
 		st.repo.EXPECT().GetActiveTransactionByCheckoutSessionIDForUpdate(testCtxTx, session.ID).
 			Return(trx, nil)
-		st.repo.EXPECT().UpdateTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
+		st.repo.EXPECT().UpdateActiveTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
 			Return(nil)
 		st.repo.EXPECT().AddActiveWalletBalance(testCtxTx, wallet.ID, trx.Amount).
 			Return(wallet, nil)

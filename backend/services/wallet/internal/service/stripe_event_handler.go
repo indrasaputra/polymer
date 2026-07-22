@@ -14,8 +14,8 @@ import (
 
 // HandleStripeEventRepository defines the interface for transaction-related table.
 type HandleStripeEventRepository interface {
-	// UpdateTransactionToCompletedByCheckoutSessionID updates the pending transaction to completed.
-	UpdateTransactionToCompletedByCheckoutSessionID(ctx context.Context, sessionID string) error
+	// UpdateActiveTransactionToCompletedByCheckoutSessionID updates the pending transaction to completed.
+	UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx context.Context, sessionID string) error
 	// GetActiveTransactionByCheckoutSessionIDForUpdate gets an active transaction by checkout session ID.
 	GetActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Context, sessionID string) (*entity.Transaction, error)
 	// GetActiveUserWalletByIDForUpdate gets active user's wallet by ID.
@@ -107,7 +107,7 @@ func (s *StripeEventHandler) updatePendingTransactionToCompleted(ctx context.Con
 			return entity.ErrInvalidTransaction
 		}
 
-		err = s.repo.UpdateTransactionToCompletedByCheckoutSessionID(ctx, session.ID)
+		err = s.repo.UpdateActiveTransactionToCompletedByCheckoutSessionID(ctx, session.ID)
 		if err != nil {
 			slog.ErrorContext(ctx, "[StripeEventHandler-updatePendingTransactionToCompleted] fail update transaction", "error", err)
 			return entity.ErrInternal

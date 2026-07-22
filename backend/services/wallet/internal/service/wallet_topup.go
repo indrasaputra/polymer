@@ -25,12 +25,12 @@ type TopupWallet interface {
 
 // TopupWalletRepository defines the interface to update wallet in repository.
 type TopupWalletRepository interface {
-	// GetPendingTransactionByIdempotencyKey gets a pending transaction by idempotency key.
-	GetPendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error)
-	// GetUserWalletByIDAndUserID gets a user's wallet.
-	GetUserWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error)
-	// GetCustomerByUserID gets a customer.
-	GetCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
+	// GetActivePendingTransactionByIdempotencyKey gets a pending transaction by idempotency key.
+	GetActivePendingTransactionByIdempotencyKey(ctx context.Context, key uuid.UUID) (*entity.Transaction, error)
+	// GetActiveWalletByIDAndUserID gets a user's wallet.
+	GetActiveWalletByIDAndUserID(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*entity.Wallet, error)
+	// GetActiveCustomerByUserID gets a customer.
+	GetActiveCustomerByUserID(ctx context.Context, userID uuid.UUID) (*entity.Customer, error)
 	// InsertTransaction inserts a new transaction.
 	InsertTransaction(ctx context.Context, transaction *entity.Transaction) (*entity.Transaction, error)
 }
@@ -62,7 +62,7 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 		return nil, err
 	}
 
-	trx, err := wt.walletRepo.GetPendingTransactionByIdempotencyKey(ctx, input.IdempotencyKey)
+	trx, err := wt.walletRepo.GetActivePendingTransactionByIdempotencyKey(ctx, input.IdempotencyKey)
 	if err != nil && err != entity.ErrNilTransaction {
 		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get transaction", "error", err)
 		return nil, entity.ErrInternal
@@ -80,12 +80,12 @@ func (wt *WalletTopup) Topup(ctx context.Context, input *entity.TopupWalletInput
 	}
 
 	// all this flow below is for non-existent transaction
-	wallet, err := wt.walletRepo.GetUserWalletByIDAndUserID(ctx, input.WalletID, input.UserID)
+	wallet, err := wt.walletRepo.GetActiveWalletByIDAndUserID(ctx, input.WalletID, input.UserID)
 	if err != nil {
 		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get wallet", "error", err)
 		return nil, err
 	}
-	customer, err := wt.walletRepo.GetCustomerByUserID(ctx, input.UserID)
+	customer, err := wt.walletRepo.GetActiveCustomerByUserID(ctx, input.UserID)
 	if err != nil {
 		slog.ErrorContext(ctx, "[WalletTopup-Topup] fail get customer", "error", err)
 		return nil, err
