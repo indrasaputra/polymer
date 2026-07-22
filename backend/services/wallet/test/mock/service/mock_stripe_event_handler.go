@@ -8,9 +8,10 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	"github.com/shopspring/decimal"
 	mock "github.com/stretchr/testify/mock"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
 // NewMockHandleStripeEventRepository creates a new instance of MockHandleStripeEventRepository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
@@ -40,12 +41,12 @@ func (_m *MockHandleStripeEventRepository) EXPECT() *MockHandleStripeEventReposi
 	return &MockHandleStripeEventRepository_Expecter{mock: &_m.Mock}
 }
 
-// AddWalletBalance provides a mock function for the type MockHandleStripeEventRepository
-func (_mock *MockHandleStripeEventRepository) AddWalletBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error) {
+// AddActiveWalletBalance provides a mock function for the type MockHandleStripeEventRepository
+func (_mock *MockHandleStripeEventRepository) AddActiveWalletBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error) {
 	ret := _mock.Called(ctx, id, amount)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddWalletBalance")
+		panic("no return value specified for AddActiveWalletBalance")
 	}
 
 	var r0 *entity.Wallet
@@ -68,20 +69,20 @@ func (_mock *MockHandleStripeEventRepository) AddWalletBalance(ctx context.Conte
 	return r0, r1
 }
 
-// MockHandleStripeEventRepository_AddWalletBalance_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddWalletBalance'
-type MockHandleStripeEventRepository_AddWalletBalance_Call struct {
+// MockHandleStripeEventRepository_AddActiveWalletBalance_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddActiveWalletBalance'
+type MockHandleStripeEventRepository_AddActiveWalletBalance_Call struct {
 	*mock.Call
 }
 
-// AddWalletBalance is a helper method to define mock.On call
+// AddActiveWalletBalance is a helper method to define mock.On call
 //   - ctx context.Context
 //   - id uuid.UUID
 //   - amount decimal.Decimal
-func (_e *MockHandleStripeEventRepository_Expecter) AddWalletBalance(ctx any, id any, amount any) *MockHandleStripeEventRepository_AddWalletBalance_Call {
-	return &MockHandleStripeEventRepository_AddWalletBalance_Call{Call: _e.mock.On("AddWalletBalance", ctx, id, amount)}
+func (_e *MockHandleStripeEventRepository_Expecter) AddActiveWalletBalance(ctx any, id any, amount any) *MockHandleStripeEventRepository_AddActiveWalletBalance_Call {
+	return &MockHandleStripeEventRepository_AddActiveWalletBalance_Call{Call: _e.mock.On("AddActiveWalletBalance", ctx, id, amount)}
 }
 
-func (_c *MockHandleStripeEventRepository_AddWalletBalance_Call) Run(run func(ctx context.Context, id uuid.UUID, amount decimal.Decimal)) *MockHandleStripeEventRepository_AddWalletBalance_Call {
+func (_c *MockHandleStripeEventRepository_AddActiveWalletBalance_Call) Run(run func(ctx context.Context, id uuid.UUID, amount decimal.Decimal)) *MockHandleStripeEventRepository_AddActiveWalletBalance_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -104,12 +105,12 @@ func (_c *MockHandleStripeEventRepository_AddWalletBalance_Call) Run(run func(ct
 	return _c
 }
 
-func (_c *MockHandleStripeEventRepository_AddWalletBalance_Call) Return(wallet *entity.Wallet, err error) *MockHandleStripeEventRepository_AddWalletBalance_Call {
+func (_c *MockHandleStripeEventRepository_AddActiveWalletBalance_Call) Return(wallet *entity.Wallet, err error) *MockHandleStripeEventRepository_AddActiveWalletBalance_Call {
 	_c.Call.Return(wallet, err)
 	return _c
 }
 
-func (_c *MockHandleStripeEventRepository_AddWalletBalance_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error)) *MockHandleStripeEventRepository_AddWalletBalance_Call {
+func (_c *MockHandleStripeEventRepository_AddActiveWalletBalance_Call) RunAndReturn(run func(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error)) *MockHandleStripeEventRepository_AddActiveWalletBalance_Call {
 	_c.Call.Return(run)
 	return _c
 }

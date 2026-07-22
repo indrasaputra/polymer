@@ -227,7 +227,7 @@ func TestStripeEventHandler_HandleCheckoutSessionCompleted(t *testing.T) {
 			Return(trx, nil)
 		st.repo.EXPECT().UpdateTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
 			Return(nil)
-		st.repo.EXPECT().AddWalletBalance(testCtxTx, wallet.ID, trx.Amount).
+		st.repo.EXPECT().AddActiveWalletBalance(testCtxTx, wallet.ID, trx.Amount).
 			Return(nil, assert.AnError)
 		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
 			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {
@@ -254,7 +254,7 @@ func TestStripeEventHandler_HandleCheckoutSessionCompleted(t *testing.T) {
 			Return(trx, nil)
 		st.repo.EXPECT().UpdateTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
 			Return(nil)
-		st.repo.EXPECT().AddWalletBalance(testCtxTx, wallet.ID, trx.Amount).
+		st.repo.EXPECT().AddActiveWalletBalance(testCtxTx, wallet.ID, trx.Amount).
 			Return(wallet, nil)
 		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
 			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {
@@ -279,7 +279,7 @@ func TestStripeEventHandler_HandleCheckoutSessionCompleted(t *testing.T) {
 			Return(trx, nil)
 		st.repo.EXPECT().UpdateTransactionToCompletedByCheckoutSessionID(testCtxTx, session.ID).
 			Return(nil)
-		st.repo.EXPECT().AddWalletBalance(testCtxTx, wallet.ID, trx.Amount).
+		st.repo.EXPECT().AddActiveWalletBalance(testCtxTx, wallet.ID, trx.Amount).
 			Return(wallet, nil)
 		st.txManager.EXPECT().Do(mock.Anything, mock.Anything).
 			RunAndReturn(func(_ context.Context, fn func(context.Context) error) error {

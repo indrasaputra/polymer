@@ -8,8 +8,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 	mock "github.com/stretchr/testify/mock"
+
+	"github.com/indrasaputra/polymer/backend/services/wallet/entity"
 )
 
 // NewMockCreateWallet creates a new instance of MockCreateWallet. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

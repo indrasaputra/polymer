@@ -229,12 +229,12 @@ func (w *Wallet) GetActiveWalletByIDForUpdate(ctx context.Context, id uuid.UUID)
 	return convertDBWalletToEntityWallet(res), nil
 }
 
-// AddWalletBalance adds some amount to specific wallet.
-func (w *Wallet) AddWalletBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error) {
-	param := db.AddWalletBalanceParams{ID: id, Amount: amount}
-	res, err := w.queries.AddWalletBalance(ctx, param)
+// AddActiveWalletBalance adds some amount to specific wallet.
+func (w *Wallet) AddActiveWalletBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error) {
+	param := db.AddActiveWalletBalanceParams{ID: id, Amount: amount}
+	res, err := w.queries.AddActiveWalletBalance(ctx, param)
 	if err != nil {
-		slog.ErrorContext(ctx, "[PostgreWallet-AddWalletBalance] internal error", "error", err)
+		slog.ErrorContext(ctx, "[PostgreWallet-AddActiveWalletBalance] internal error", "error", err)
 		return nil, entity.ErrInternal
 	}
 	return convertDBWalletToEntityWallet(res), nil

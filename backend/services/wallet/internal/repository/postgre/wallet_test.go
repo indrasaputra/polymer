@@ -593,8 +593,8 @@ func TestWallet_GetActiveWalletByIDForUpdate(t *testing.T) {
 	})
 }
 
-func TestWallet_AddWalletBalance(t *testing.T) {
-	queryUpdate := `UPDATE wallets SET balance = balance \+ \$2 WHERE id = \$1 --noqa
+func TestWallet_AddActiveWalletBalance(t *testing.T) {
+	queryUpdate := `UPDATE wallets SET balance = balance \+ \$2 WHERE id = \$1 AND deleted_at IS NULL --noqa
 					RETURNING id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by`
 
 	t.Run("add wallet balance returns error", func(t *testing.T) {
@@ -606,7 +606,7 @@ func TestWallet_AddWalletBalance(t *testing.T) {
 			WithArgs(wallet.ID, amount).
 			WillReturnError(assert.AnError)
 
-		res, err := st.pgWallet.AddWalletBalance(testCtx, wallet.ID, amount)
+		res, err := st.pgWallet.AddActiveWalletBalance(testCtx, wallet.ID, amount)
 
 		assert.Error(t, err)
 		assert.Equal(t, entity.ErrInternal, err)
@@ -623,7 +623,7 @@ func TestWallet_AddWalletBalance(t *testing.T) {
 			WillReturnRows(pgxmock.NewRows([]string{"id", "user_id", "balance", "currency", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by"}).
 				AddRow(wallet.ID, wallet.UserID, wallet.Balance, wallet.Currency, wallet.CreatedAt, wallet.UpdatedAt, wallet.DeletedAt, wallet.CreatedBy, wallet.UpdatedBy, wallet.DeletedBy))
 
-		res, err := st.pgWallet.AddWalletBalance(testCtx, wallet.ID, amount)
+		res, err := st.pgWallet.AddActiveWalletBalance(testCtx, wallet.ID, amount)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, res)

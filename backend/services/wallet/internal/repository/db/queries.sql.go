@@ -13,18 +13,18 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const addWalletBalance = `-- name: AddWalletBalance :one
-UPDATE wallets SET balance = balance + $2 WHERE id = $1 --noqa
+const addActiveWalletBalance = `-- name: AddActiveWalletBalance :one
+UPDATE wallets SET balance = balance + $2 WHERE id = $1 AND deleted_at IS NULL --noqa
 RETURNING id, user_id, balance, currency, created_at, updated_at, deleted_at, created_by, updated_by, deleted_by
 `
 
-type AddWalletBalanceParams struct {
+type AddActiveWalletBalanceParams struct {
 	ID     uuid.UUID
 	Amount decimal.Decimal
 }
 
-func (q *Queries) AddWalletBalance(ctx context.Context, arg AddWalletBalanceParams) (*Wallet, error) {
-	row := q.db.QueryRow(ctx, addWalletBalance, arg.ID, arg.Amount)
+func (q *Queries) AddActiveWalletBalance(ctx context.Context, arg AddActiveWalletBalanceParams) (*Wallet, error) {
+	row := q.db.QueryRow(ctx, addActiveWalletBalance, arg.ID, arg.Amount)
 	var i Wallet
 	err := row.Scan(
 		&i.ID,

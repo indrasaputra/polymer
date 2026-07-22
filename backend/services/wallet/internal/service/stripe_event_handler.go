@@ -20,8 +20,8 @@ type HandleStripeEventRepository interface {
 	GetActiveTransactionByCheckoutSessionIDForUpdate(ctx context.Context, sessionID string) (*entity.Transaction, error)
 	// GetActiveUserWalletByIDForUpdate gets active user's wallet by ID.
 	GetActiveWalletByIDForUpdate(ctx context.Context, id uuid.UUID) (*entity.Wallet, error)
-	// AddWalletBalance adds wallet's balance.
-	AddWalletBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error)
+	// AddActiveWalletBalance adds wallet's balance.
+	AddActiveWalletBalance(ctx context.Context, id uuid.UUID, amount decimal.Decimal) (*entity.Wallet, error)
 }
 
 // StripeEventHandler is responsible to handle Stripe event.
@@ -78,8 +78,8 @@ func (s *StripeEventHandler) getActiveTransactionByCheckoutSessionIDForUpdate(ct
 // The problem with this approach, there is implicit lock on wallet.
 // The actual process is: lock transaction, update transaction, lock wallet, update wallet.
 // Therefore, in any other process that includes both wallet and transaction,
-// transaction MUST BE locked first, then lock wallet so it aligns with this function.
-// If in other process, wallet is locked first then lock transaction, there is a chance for deadlock.
+// wallet MUST BE locked first, then lock transaction so it aligns with this function.
+// If in other process, transaction is locked first then lock wallet, there is a chance for deadlock.
 // In this function, the purpose of lock wallet explicitly is to create a mindset
 // that in other process, wallet must be locked first before transaction.
 // Most of the time, wallet is locked first (e.g: check if balance is sufficient) before locking the transaction.
@@ -113,7 +113,7 @@ func (s *StripeEventHandler) updatePendingTransactionToCompleted(ctx context.Con
 			return entity.ErrInternal
 		}
 
-		_, err = s.repo.AddWalletBalance(ctx, wallet.ID, trx.Amount)
+		_, err = s.repo.AddActiveWalletBalance(ctx, wallet.ID, trx.Amount)
 		if err != nil {
 			slog.ErrorContext(ctx, "[StripeEventHandler-updatePendingTransactionToCompleted] fail add balance to wallet", "error", err)
 			return entity.ErrInternal

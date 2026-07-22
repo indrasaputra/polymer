@@ -17,8 +17,8 @@ SELECT * FROM wallets
 WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
 LIMIT 1;
 
--- name: AddWalletBalance :one
-UPDATE wallets SET balance = balance + @amount WHERE id = $1 --noqa
+-- name: AddActiveWalletBalance :one
+UPDATE wallets SET balance = balance + @amount WHERE id = $1 AND deleted_at IS NULL --noqa
 RETURNING *;
 
 -- name: InsertCustomer :one
