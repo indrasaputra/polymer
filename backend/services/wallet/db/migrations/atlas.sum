@@ -1,4 +1,5 @@
-h1:HFFnvS1sP3fchO/iOLMRbOdFYb0EmGH2xYLUPehiRpA=
+h1:VoqA3zt/upkaIvICzSmDepXtSV1pw4laG13DlGC4phs=
 20260619071549_create_wallets.sql h1:0wCytFhZ9CV+yMQz8ToyFpsser8t7n3iIg71Gcj2Swk=
 20260718053000_create_customers.sql h1:ZafB9TZ7GAc4z4Z/eWMBq8OogyZC3/CTjxFV2TBDGD8=
 20260718123820_create_transactions.sql h1:Y/yOWAFAZ+nkSHg9K1pR6XSKGhiSleJcXAP4tzNv7+M=
+20260722060633_remove_redundant_index_in_wallets.sql h1:sg+9PsseT+0VTwQh8si6siC0nsx78//gIzc4MMOzXBw=
